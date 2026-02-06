@@ -54,7 +54,7 @@ jobs:
           # Note: The template uses the shields.io dynamic badge, we can replace it with a static one if desired
           # but for now we'll just ensure README.md exists and is updated with a timestamp
           
-          sed -i "s|https://img.shields.io/github/stars/Admonstrator/glinet-firmware-overviewr?style=for-the-badge|https://img.shields.io/badge/stars-${stars}-${stars_color}?style=for-the-badge\&logo=github|g" README.md
+          sed -i "s|https://img.shields.io/github/stars/Admonstrator/glinet-firmware-overview?style=for-the-badge|https://img.shields.io/badge/stars-${stars}-${stars_color}?style=for-the-badge\&logo=github|g" README.md
           
           # Add last updated footer
           echo "" >> README.md
