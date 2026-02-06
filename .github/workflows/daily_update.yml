@@ -2,7 +2,7 @@ name: Update and Deploy Firmware Overview
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight UTC
+    - cron: '0 4 * * *' # Runs daily at 04:00 UTC
   workflow_dispatch: # Allows manual trigger
 
 permissions:

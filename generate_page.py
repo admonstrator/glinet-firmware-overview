@@ -385,7 +385,7 @@ def generate_api_files(models):
                 
                 # Main file returns version (legacy/shorthand)
                 with open(os.path.join(model_dir, s_name + "_version"), 'w') as f:
-                    f.write(version)
+                    f.write(version + '\n')
                 
                 # Summary file at the stage directory level
                 with open(os.path.join(stage_path, 'index.html'), 'w') as f:
@@ -393,13 +393,13 @@ def generate_api_files(models):
                 
                 # Sub-files for specific attributes
                 with open(os.path.join(stage_path, 'version'), 'w') as f:
-                    f.write(version)
+                    f.write(version + '\n')
                 with open(os.path.join(stage_path, 'url'), 'w') as f:
-                    f.write(download_url)
+                    f.write(download_url + '\n')
                 with open(os.path.join(stage_path, 'date'), 'w') as f:
-                    f.write(release_time)
+                    f.write(release_time + '\n')
                 with open(os.path.join(stage_path, 'hash'), 'w') as f:
-                    f.write(md5_hash)
+                    f.write(md5_hash + '\n')
 
     with open(os.path.join(api_dir, 'all.json'), 'w') as f:
         json.dump(all_data, f, indent=2)
