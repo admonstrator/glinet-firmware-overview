@@ -343,16 +343,14 @@ def generate_api_files(models):
             os.makedirs(model_dir)
         
         # List available branches/stages for this model
-        available_stages = sorted(list(stages.keys()))
+        available_stages = sorted([s.lower() for s in stages.keys()])
         branches_content = '\n'.join(available_stages) + '\n'
         
         # 1. Provide at api/model_code/branches
         with open(os.path.join(model_dir, 'branches'), 'w') as f:
             f.write(branches_content)
             
-        # 2. Provide at api/model_code (as a file)
-        # Note: This might conflict if api/model_code is a directory. 
-        # On many static hosts, api/model_code/index.html is served for api/model_code/
+        # 2. Provide at api/model_code/index.html (served as /api/model_code/)
         with open(os.path.join(model_dir, 'index.html'), 'w') as f:
             f.write(branches_content)
             
@@ -364,6 +362,8 @@ def generate_api_files(models):
             download_url = info.get('download', [{}])[0].get('link', '')
             # Try to find a hash (md5 is common in GL.iNet API)
             md5_hash = info.get('download', [{}])[0].get('md5', '')
+            
+            summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\n"
             
             all_data[model_code][stage.lower()] = {
                 'version': version,
@@ -386,6 +386,10 @@ def generate_api_files(models):
                 # Main file returns version (legacy/shorthand)
                 with open(os.path.join(model_dir, s_name + "_version"), 'w') as f:
                     f.write(version)
+                
+                # Summary file at the stage directory level
+                with open(os.path.join(stage_path, 'index.html'), 'w') as f:
+                    f.write(summary_content)
                 
                 # Sub-files for specific attributes
                 with open(os.path.join(stage_path, 'version'), 'w') as f:
