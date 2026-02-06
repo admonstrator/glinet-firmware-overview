@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/admonstrator/glinet-firmware-overview/main/images/robbenlogo-glinet-smapp.webp" width="300" alt="GL.iNet Firmware Overview Logo" style="border-radius: 10px; margin: 20px 0;">
+<img src="https://raw.githubusercontent.com/admonstrator/glinet-firmware-overview/main/images/robbenlogo-glinet-small.webp" width="300" alt="GL.iNet Firmware Overview Logo" style="border-radius: 10px; margin: 20px 0;">
 
 ## GL.iNet Firmware Overview
 
