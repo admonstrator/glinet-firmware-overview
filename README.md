@@ -1,14 +1,14 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Admonstrator/glinet-firmware-overviewr/main/images/logo.webp" width="300" alt="GL.iNet Firmware Overview Logo" style="border-radius: 10px; margin: 20px 0;">
+<img src="https://raw.githubusercontent.com/admonstrator/glinet-firmware-overview/main/images/robbenlogo-glinet-smapp.webp" width="300" alt="GL.iNet Firmware Overview Logo" style="border-radius: 10px; margin: 20px 0;">
 
 ## GL.iNet Firmware Overview
 
 **Automated dashboard and flat-file API for GL.iNet firmware tracking!**
 
-[![Stars](https://img.shields.io/badge/stars-0-orange?style=for-the-badge&logo=github)](https://github.com/Admonstrator/glinet-firmware-overviewr/stargazers)
-[![License](https://img.shields.io/github/license/Admonstrator/glinet-firmware-overviewr?style=for-the-badge)](LICENSE)
-[![Dashboard](https://img.shields.io/badge/Live-Dashboard-blue?style=for-the-badge&logo=google-chrome)](https://admonstrator.github.io/glinet-firmware-overviewr/)
+[![Stars](https://img.shields.io/github/stars/admonstrator/glinet-firmware-overview?style=for-the-badge)](https://github.com/admonstrator/glinet-firmware-overview/stargazers)
+[![License](https://img.shields.io/github/license/admonstrator/glinet-firmware-overview?style=for-the-badge)](LICENSE)
+[![Dashboard](https://img.shields.io/badge/Live-Dashboard-blue?style=for-the-badge&logo=google-chrome)](https://admonstrator.github.io/glinet-firmware-overview/)
 
 ---
 
@@ -28,7 +28,7 @@ This project is an automated dashboard and flat-file API provider for GL.iNet fi
 
 Created by [Admon](https://admon.me) (Aaron Viehl) for the GL.iNet community.
 
-> 🎖️ **Community Maintained** – Part of the [GL.iNet Toolbox](https://github.com/Admonstrator/glinet-toolbox) project  
+> 🎖️ **Community Maintained** – Part of the [GL.iNet Toolbox](https://github.com/admonstrator/glinet-toolbox) project  
 > ⚠️ **Independent Project** – Not officially affiliated with GL.iNet
 
 ---
@@ -57,7 +57,7 @@ This project serves as a machine-readable API. You can access version informatio
 | `/api/<model>/<stage>/hash` | Returns the MD5 hash (if available) |
 
 **Example:**
-`https://admonstrator.github.io/glinet-firmware-overviewr/api/ax1800/release_version`
+`https://admonstrator.github.io/glinet-firmware-overview/api/ax1800/release_version`
 
 ---
 
@@ -78,7 +78,6 @@ The script handles GL.iNet's API limitations by fetching model data individually
 Need assistance or have questions?
 
 - 💬 [Join the discussion on GL.iNet Forum](https://forum.gl-inet.com/) – Community support
-- 🐛 [Report issues on GitHub](https://github.com/Admonstrator/glinet-firmware-overviewr/issues) – Bug reports and feature requests
 
 ---
 
@@ -97,7 +96,7 @@ This project is part of a comprehensive collection of tools for GL.iNet routers.
 
 **Explore more tools and utilities:**
 
-[![GL.iNet Toolbox](https://img.shields.io/badge/🧰_GL.iNet_Toolbox-Explore_All_Tools-blue?style=for-the-badge)](https://github.com/Admonstrator/glinet-toolbox)
+[![GL.iNet Toolbox](https://img.shields.io/badge/🧰_GL.iNet_Toolbox-Explore_All_Tools-blue?style=for-the-badge)](https://github.com/admonstrator/glinet-toolbox)
 
 *Discover AdGuard Home Updater, Tailscale Updater, and more community-driven projects!*
 
@@ -107,7 +106,7 @@ This project is part of a comprehensive collection of tools for GL.iNet routers.
 
 <div align="center">
 
-**Made with ❤️ by [Admon](https://github.com/Admonstrator) for the GL.iNet Community**
+**Made with ❤️ by [Admon](https://github.com/admonstrator) for the GL.iNet Community**
 
 ⭐ If you find this useful, please star the repository!
 
