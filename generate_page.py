@@ -182,10 +182,11 @@ def generate_html(models, models_metadata):
                     <div id="collapseAPI" class="accordion-collapse collapse" aria-labelledby="headingAPI" data-bs-parent="#apiAccordion">
                         <div class="accordion-body api-info m-0 border-top">
                             <p class="small mb-2">
-                                This dashboard provides a machine-readable API. You can access version information directly:
+                                This dashboard provides a machine-readable flat-file API. You can access firmware information directly:
                             </p>
                             <ul class="small mb-0">
-                                <li><strong>Version string:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;_version</code> (e.g., <code>/api/ax1800/release_version</code>)</li>
+                                <li><strong>Available stages:</strong> <code>/api/&lt;model&gt;/branches</code> (e.g., <code>/api/ax1800/branches</code>)</li>
+                                <li><strong>Version string:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/version</code> (e.g., <code>/api/ax1800/release/version</code>)</li>
                                 <li><strong>Download URL:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/url</code></li>
                                 <li><strong>Specific attributes:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/[version|url|date|hash]</code></li>
                                 <li><strong>Consolidated data:</strong> <code>/api/all.json</code></li>
@@ -338,7 +339,8 @@ def generate_api_files(models):
     all_data = {}
 
     for model_code, stages in models.items():
-        model_dir = os.path.join(api_dir, model_code)
+        model_code_lower = model_code.lower()
+        model_dir = os.path.join(api_dir, model_code_lower)
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         
@@ -354,7 +356,7 @@ def generate_api_files(models):
         with open(os.path.join(model_dir, 'index.html'), 'w') as f:
             f.write(branches_content)
             
-        all_data[model_code] = {}
+        all_data[model_code_lower] = {}
         
         for stage, info in stages.items():
             version = info.get('version', 'N/A')
@@ -365,41 +367,37 @@ def generate_api_files(models):
             
             summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\n"
             
-            all_data[model_code][stage.lower()] = {
+            s_name = stage.lower()
+            all_data[model_code_lower][s_name] = {
                 'version': version,
                 'release_time': release_time,
                 'download': download_url,
                 'md5': md5_hash
             }
             
-            # Simple structure: api/model/stage -> version string
-            for s_name in [stage.upper(), stage.lower()]:
-                stage_path = os.path.join(model_dir, s_name)
-                
-                # If a file exists where we want a directory, remove it
-                if os.path.exists(stage_path) and not os.path.isdir(stage_path):
-                    os.remove(stage_path)
-                
-                if not os.path.exists(stage_path):
-                    os.makedirs(stage_path)
-                
-                # Main file returns version (legacy/shorthand)
-                with open(os.path.join(model_dir, s_name + "_version"), 'w') as f:
-                    f.write(version + '\n')
-                
-                # Summary file at the stage directory level
-                with open(os.path.join(stage_path, 'index.html'), 'w') as f:
-                    f.write(summary_content)
-                
-                # Sub-files for specific attributes
-                with open(os.path.join(stage_path, 'version'), 'w') as f:
-                    f.write(version + '\n')
-                with open(os.path.join(stage_path, 'url'), 'w') as f:
-                    f.write(download_url + '\n')
-                with open(os.path.join(stage_path, 'date'), 'w') as f:
-                    f.write(release_time + '\n')
-                with open(os.path.join(stage_path, 'hash'), 'w') as f:
-                    f.write(md5_hash + '\n')
+            # Simple structure: api/model/stage/attribute
+            stage_path = os.path.join(model_dir, s_name)
+            
+            # If a file exists where we want a directory, remove it
+            if os.path.exists(stage_path) and not os.path.isdir(stage_path):
+                os.remove(stage_path)
+            
+            if not os.path.exists(stage_path):
+                os.makedirs(stage_path)
+            
+            # Summary file at the stage directory level
+            with open(os.path.join(stage_path, 'index.html'), 'w') as f:
+                f.write(summary_content)
+            
+            # Sub-files for specific attributes
+            with open(os.path.join(stage_path, 'version'), 'w') as f:
+                f.write(version + '\n')
+            with open(os.path.join(stage_path, 'url'), 'w') as f:
+                f.write(download_url + '\n')
+            with open(os.path.join(stage_path, 'date'), 'w') as f:
+                f.write(release_time + '\n')
+            with open(os.path.join(stage_path, 'hash'), 'w') as f:
+                f.write(md5_hash + '\n')
 
     with open(os.path.join(api_dir, 'all.json'), 'w') as f:
         json.dump(all_data, f, indent=2)
