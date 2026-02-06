@@ -1,0 +1,81 @@
+name: Update README
+
+on:
+  workflow_run:
+    workflows: ["Update and Deploy Firmware Overview"]
+    types:
+      - completed
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch repository statistics
+        id: stats
+        run: |
+          # Get repository data
+          response=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" 
+            "https://api.github.com/repos/${{ github.repository }}")
+          
+          stars=$(echo "$response" | jq -r '.stargazers_count')
+          
+          echo "stars=$stars" >> $GITHUB_OUTPUT
+          echo "✅ Fetched stats: $stars stars"
+
+      - name: Generate README from template
+        run: |
+          # Helper function to create color based on count
+          get_color() {
+            local count=$1
+            if [ "$count" -ge 100 ]; then echo "brightgreen"
+            elif [ "$count" -ge 50 ]; then echo "green"
+            elif [ "$count" -ge 20 ]; then echo "yellowgreen"
+            elif [ "$count" -ge 10 ]; then echo "yellow"
+            else echo "orange"
+            fi
+          }
+          
+          stars="${{ steps.stats.outputs.stars }}"
+          stars_color=$(get_color $stars)
+          update_date=$(date '+%Y-%m-%d')
+          
+          # Copy template and replace badge URLs
+          cp readme.template.md README.md
+          
+          # Replace dynamic GitHub badges with static shields.io badges
+          # Note: The template uses the shields.io dynamic badge, we can replace it with a static one if desired
+          # but for now we'll just ensure README.md exists and is updated with a timestamp
+          
+          sed -i "s|https://img.shields.io/github/stars/Admonstrator/glinet-firmware-overviewr?style=for-the-badge|https://img.shields.io/badge/stars-${stars}-${stars_color}?style=for-the-badge\&logo=github|g" README.md
+          
+          # Add last updated footer
+          echo "" >> README.md
+          echo "<div align="center">" >> README.md
+          echo "" >> README.md
+          echo "_Last updated: ${update_date}_" >> README.md
+          echo "" >> README.md
+          echo "</div>" >> README.md
+          
+          echo "✅ README generated successfully"
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "🤖 Update README [automated]"
+            git push
+          fi
