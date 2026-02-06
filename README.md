@@ -26,10 +26,10 @@ If you find this tool helpful, consider supporting its development:
 
 This project is an automated dashboard and flat-file API provider for GL.iNet firmware versions. It tracks the latest firmware releases (RELEASE, BETA, SNAPSHOT, TESTING, etc.) for all GL.iNet router, IOT, and KVM models.
 
-Created by [Admon](https://admon.me) (Aaron Viehl) for the GL.iNet community.
+Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community.
 
-> 🎖️ **Community Maintained** – Part of the [GL.iNet Toolbox](https://github.com/admonstrator/glinet-toolbox) project  
-> ⚠️ **Independent Project** – Not officially affiliated with GL.iNet
+> 🎖️ **Community Maintained** – Part of the [GL.iNet Toolbox](https://github.com/Admonstrator/glinet-toolbox) project  
+> ⚠️ **Independent Project** – Not officially affiliated with GL.iNet or Tailscale
 
 ---
 
@@ -51,25 +51,13 @@ This project serves as a machine-readable API. You can access version informatio
 |----------|-------------|
 | `/api/all.json` | Consolidated JSON of all tracked models and versions |
 | `/api/<model>/branches` | Text file listing available firmware stages for a model |
-| `/api/<model>/<stage>_version` | Returns only the version string (e.g., `4.5.0`) |
+| `/api/<model>/<stage>/version` | Returns only the version string (e.g., `4.5.0`) |
 | `/api/<model>/<stage>/url` | Returns the direct download URL for the firmware |
 | `/api/<model>/<stage>/date` | Returns the release date |
 | `/api/<model>/<stage>/hash` | Returns the MD5 hash (if available) |
 
 **Example:**
-`https://admonstrator.github.io/glinet-firmware-overview/api/ax1800/release_version`
-
----
-
-## 🔍 Key Features Explained
-
-### 🎯 Link Verification
-
-Unlike static lists, this project performs `HEAD` requests for every single firmware entry during each update. If a link is dead, it won't be shown as the latest version, ensuring you always get working downloads.
-
-### 📦 Batch Processing
-
-The script handles GL.iNet's API limitations by fetching model data individually, ensuring that IOT and KVM devices (often missed by bulk endpoints) are included.
+`curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`
 
 ---
 
