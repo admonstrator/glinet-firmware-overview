@@ -20,23 +20,29 @@ def check_link(url):
 
 import time
 
+def fetch_data(url):
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0')
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                if 'info' in data:
+                    return data['info']
+    except Exception as e:
+        print(f"\nError fetching model {model}: {e}")
+        pass
+    return []
+
 def fetch_data_individual(model_codes):
     all_info = []
     total = len(model_codes)
     for idx, model in enumerate(model_codes):
         url = f"{API_URL}?model={model}"
         print(f"Fetching firmware info for {model} ({idx+1}/{total})...", end="\r")
-        try:
-            req = urllib.request.Request(url)
-            req.add_header('User-Agent', 'Mozilla/5.0')
-            with urllib.request.urlopen(req) as response:
-                if response.status == 200:
-                    data = json.loads(response.read().decode())
-                    if 'info' in data:
-                        all_info.extend(data['info'])
-            time.sleep(0.1) # Be nice to the API
-        except Exception as e:
-            print(f"\nError fetching model {model}: {e}")
+        all_info.extend(fetch_data(url))
+        all_info.extend(fetch_data(f"{API_URL}?model={model}-open"))
+        time.sleep(0.1) # Be nice to the API
     
     print(f"\nFetched total {len(all_info)} firmware entries.")
     return {'info': all_info}
@@ -59,6 +65,9 @@ def process_data(data, models_metadata):
         
         if not model_code or not stage:
             continue
+
+        if model_code.endswith('-open'):
+            model_code = model_code[:-5]
 
         if model_code not in models:
             models[model_code] = {}
