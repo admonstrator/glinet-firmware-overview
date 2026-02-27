@@ -20,23 +20,29 @@ def check_link(url):
 
 import time
 
+def fetch_data(url):
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0')
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                if 'info' in data:
+                    return data['info']
+    except Exception as e:
+        print(f"\nError fetching URL {url}: {e}")
+        pass
+    return []
+
 def fetch_data_individual(model_codes):
     all_info = []
     total = len(model_codes)
     for idx, model in enumerate(model_codes):
         url = f"{API_URL}?model={model}"
         print(f"Fetching firmware info for {model} ({idx+1}/{total})...", end="\r")
-        try:
-            req = urllib.request.Request(url)
-            req.add_header('User-Agent', 'Mozilla/5.0')
-            with urllib.request.urlopen(req) as response:
-                if response.status == 200:
-                    data = json.loads(response.read().decode())
-                    if 'info' in data:
-                        all_info.extend(data['info'])
-            time.sleep(0.1) # Be nice to the API
-        except Exception as e:
-            print(f"\nError fetching model {model}: {e}")
+        all_info.extend(fetch_data(url))
+        all_info.extend(fetch_data(f"{API_URL}?model={model}-open"))
+        time.sleep(0.1) # Be nice to the API
     
     print(f"\nFetched total {len(all_info)} firmware entries.")
     return {'info': all_info}
@@ -59,6 +65,14 @@ def process_data(data, models_metadata):
         
         if not model_code or not stage:
             continue
+
+        if model_code.endswith('-open'):
+            model_code = model_code[:-5]
+            stage = 'BETA_OPEN'
+            entry['_is_open'] = True
+
+        if stage == 'TESTING':
+            stage = 'BETA'
 
         if model_code not in models:
             models[model_code] = {}
@@ -104,13 +118,13 @@ def generate_html(models, models_metadata):
     for m_type in grouped_models:
         grouped_models[m_type].sort(key=get_sort_key)
     
-    # Collect all unique stages to create table headers
+    # Collect all unique stages to create table headers, exclude internal BETA_OPEN
     all_stages = set()
     for model in models:
-        all_stages.update(models[model].keys())
+        all_stages.update(s for s in models[model].keys() if s != 'BETA_OPEN')
     
     # Define a preferred order for columns
-    stage_order = ['RELEASE', 'BETA', 'SNAPSHOT', 'TESTING', 'RC', 'OP24']
+    stage_order = ['RELEASE', 'BETA', 'SNAPSHOT', 'RC']
     sorted_stages = [s for s in stage_order if s in all_stages] + [s for s in sorted(all_stages) if s not in stage_order]
 
     html = f"""
@@ -135,7 +149,7 @@ def generate_html(models, models_metadata):
         
         /* Stage specific colors */
         .stage-RELEASE {{ color: #198754; }}
-        .stage-BETA {{ color: #ffc107; }}
+        .stage-BETA {{ color: #0d6efd; }}
         .stage-SNAPSHOT {{ color: #0dcaf0; }}
         .stage-TESTING {{ color: #dc3545; }}
         .stage-RC {{ color: #fd7e14; }}
@@ -248,23 +262,24 @@ def generate_html(models, models_metadata):
             """
             for stage in sorted_stages:
                 info = models[code].get(stage)
-                if info:
-                    version = info.get('version', 'N/A')
-                    release_time = info.get('release_time', '').split(' ')[0]
-                    download_link = "#"
-                    if 'download' in info and info['download']:
-                         download_link = info['download'][0].get('link', '#')
-                    
-                    html += f"""
-                        <td>
-                            <div class="d-flex flex-column">
-                                <a href="{download_link}" target="_blank" class="fw-version text-decoration-none stage-{stage}">
-                                    {version} <i class="fas fa-download small ms-1"></i>
-                                </a>
-                                <span class="timestamp">{release_time}</span>
-                            </div>
-                        </td>
-                    """
+                info_open = models[code].get('BETA_OPEN') if stage == 'BETA' else None
+                if info or info_open:
+                    cells = []
+                    for entry_info in [i for i in [info, info_open] if i]:
+                        version = entry_info.get('version', 'N/A')
+                        release_time = entry_info.get('release_time', '').split(' ')[0]
+                        download_link = "#"
+                        if 'download' in entry_info and entry_info['download']:
+                             download_link = entry_info['download'][0].get('link', '#')
+                        open_badge = '<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt 24 open variant">OP24</span>' if entry_info.get('_is_open') else ''
+                        cells.append(f'''
+                                <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
+                                    <a href="{download_link}" target="_blank" class="fw-version text-decoration-none stage-{stage}">
+                                        {version} <i class="fas fa-download small ms-1"></i>
+                                    </a>
+                                    <span class="timestamp">{release_time}{open_badge}</span>
+                                </div>''')
+                    html += f"<td>{''.join(cells)}</td>"
                 else:
                     html += "<td><span class='text-muted'>-</span></td>"
             html += "</tr>"
@@ -332,8 +347,10 @@ def generate_html(models, models_metadata):
 
 def generate_api_files(models):
     api_dir = 'api'
-    if not os.path.exists(api_dir):
-        os.makedirs(api_dir)
+    if os.path.exists(api_dir):
+        import shutil
+        shutil.rmtree(api_dir)
+    os.makedirs(api_dir)
     
     # Also generate a consolidated JSON
     all_data = {}
@@ -345,7 +362,7 @@ def generate_api_files(models):
             os.makedirs(model_dir)
         
         # List available branches/stages for this model
-        available_stages = sorted([s.lower() for s in stages.keys()])
+        available_stages = sorted([s.lower().replace('_open', '-open') for s in stages.keys()])
         branches_content = '\n'.join(available_stages) + '\n'
         
         # 1. Provide at api/model_code/branches
@@ -359,6 +376,7 @@ def generate_api_files(models):
         all_data[model_code_lower] = {}
         
         for stage, info in stages.items():
+            s_name = stage.lower().replace('_open', '-open')
             version = info.get('version', 'N/A')
             release_time = info.get('release_time', '')
             download_url = info.get('download', [{}])[0].get('link', '')
@@ -367,7 +385,6 @@ def generate_api_files(models):
             
             summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\n"
             
-            s_name = stage.lower()
             all_data[model_code_lower][s_name] = {
                 'version': version,
                 'release_time': release_time,
