@@ -30,7 +30,7 @@ def fetch_data(url):
                 if 'info' in data:
                     return data['info']
     except Exception as e:
-        print(f"\nError fetching model {model}: {e}")
+        print(f"\nError fetching URL {url}: {e}")
         pass
     return []
 
