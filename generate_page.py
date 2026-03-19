@@ -437,7 +437,7 @@ def generate_api_files(models):
             # Try to find a hash (md5 is common in GL.iNet API)
             md5_hash = info.get('download', [{}])[0].get('md5', '')
             changelog = (info.get('changelog') or '').strip()
-            changelog_path = f"/api/{model_code_lower}/{s_name}/changelog"
+            changelog_path = f"https://glinet-firmware.admon.me/api/{model_code_lower}/{s_name}/changelog"
             
             summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\nchangelog: {changelog_path}\n"
             
