@@ -55,6 +55,9 @@ This project serves as a machine-readable API. You can access version informatio
 | `/api/<model>/<stage>/url` | Returns the direct download URL for the firmware |
 | `/api/<model>/<stage>/date` | Returns the release date |
 | `/api/<model>/<stage>/hash` | Returns the MD5 hash (if available) |
+| `/api/<model>/<stage>/changelog` | Returns the latest changelog as plain text (TXT) |
+
+`/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content.
 
 **Example:**
 `curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`

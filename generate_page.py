@@ -1,5 +1,7 @@
 import urllib.request
 import json
+import html as html_lib
+import re
 from datetime import datetime
 import os
 import time
@@ -19,6 +21,48 @@ def check_link(url):
         return False
 
 import time
+
+def extract_changelog(entry):
+    """Extract changelog text from known API field variants."""
+    changelog_keys = [
+        'changelog', 'release_notes', 'release_note', 'notes',
+        'description', 'change_log', 'whats_new', 'what_is_new'
+    ]
+
+    for key in changelog_keys:
+        value = entry.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, list):
+            parts = [item.strip() for item in value if isinstance(item, str) and item.strip()]
+            if parts:
+                return '\n'.join(parts)
+        if isinstance(value, dict):
+            nested_parts = []
+            for nested_key in ['en', 'text', 'content', 'message', 'body']:
+                nested_val = value.get(nested_key)
+                if isinstance(nested_val, str) and nested_val.strip():
+                    nested_parts.append(nested_val.strip())
+            if nested_parts:
+                return '\n'.join(nested_parts)
+
+    return ''
+
+def changelog_to_plain_text(changelog_text):
+    """Convert changelog content to plain text by removing HTML markup."""
+    if not changelog_text:
+        return ''
+
+    text = changelog_text
+    # Preserve visual structure for common block/list tags before stripping all tags.
+    text = re.sub(r'(?i)<\s*br\s*/?\s*>', '\n', text)
+    text = re.sub(r'(?i)</\s*(p|div|h1|h2|h3|h4|h5|h6|li|ul|ol)\s*>', '\n', text)
+    text = re.sub(r'(?is)<\s*script[^>]*>.*?<\s*/\s*script\s*>', '', text)
+    text = re.sub(r'(?is)<\s*style[^>]*>.*?<\s*/\s*style\s*>', '', text)
+    text = re.sub(r'(?s)<[^>]+>', '', text)
+    text = html_lib.unescape(text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
 
 def fetch_data(url):
     try:
@@ -91,7 +135,9 @@ def process_data(data, models_metadata):
             
             print(f"[{idx+1}/{total_entries}] Validating link for {model_code} ({stage})...", end="\r")
             if check_link(download_link):
-                models[model_code][stage] = entry
+                selected_entry = dict(entry)
+                selected_entry['changelog'] = changelog_to_plain_text(extract_changelog(entry))
+                models[model_code][stage] = selected_entry
             else:
                 # If the newer one is broken, keep the old one if it exists and was valid
                 # Or just don't store it. For now, we only store if valid.
@@ -202,7 +248,8 @@ def generate_html(models, models_metadata):
                                 <li><strong>Available stages:</strong> <code>/api/&lt;model&gt;/branches</code> (e.g., <code>/api/ax1800/branches</code>)</li>
                                 <li><strong>Version string:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/version</code> (e.g., <code>/api/ax1800/release/version</code>)</li>
                                 <li><strong>Download URL:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/url</code></li>
-                                <li><strong>Specific attributes:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/[version|url|date|hash]</code></li>
+                                <li><strong>Latest changelog:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/changelog</code></li>
+                                <li><strong>Specific attributes:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/[version|url|date|hash|changelog]</code></li>
                                 <li><strong>Consolidated data:</strong> <code>/api/all.json</code></li>
                             </ul>
                         </div>
@@ -265,19 +312,26 @@ def generate_html(models, models_metadata):
                 info_open = models[code].get('BETA_OPEN') if stage == 'BETA' else None
                 if info or info_open:
                     cells = []
-                    for entry_info in [i for i in [info, info_open] if i]:
+                    visible_entries = [i for i in [info, info_open] if i]
+                    for entry_info in visible_entries:
                         version = entry_info.get('version', 'N/A')
                         release_time = entry_info.get('release_time', '').split(' ')[0]
                         download_link = "#"
                         if 'download' in entry_info and entry_info['download']:
                              download_link = entry_info['download'][0].get('link', '#')
+                        changelog_text = (entry_info.get('changelog') or '').strip()
+                        timestamp_html = f'<span class="timestamp">{release_time}</span>'
+                        if changelog_text:
+                            stage_name = stage.lower().replace('_open', '-open')
+                            changelog_path = f"api/{code.lower()}/{stage_name}/changelog"
+                            timestamp_html = f'<a class="timestamp text-decoration-none" href="{changelog_path}" target="_blank" title="Open latest changelog TXT">{release_time} <i class="fas fa-file-lines small ms-1"></i></a>'
                         open_badge = '<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt 24 open variant">OP24</span>' if entry_info.get('_is_open') else ''
                         cells.append(f'''
                                 <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
                                     <a href="{download_link}" target="_blank" class="fw-version text-decoration-none stage-{stage}">
                                         {version} <i class="fas fa-download small ms-1"></i>
                                     </a>
-                                    <span class="timestamp">{release_time}{open_badge}</span>
+                                    <div>{timestamp_html}{open_badge}</div>
                                 </div>''')
                     html += f"<td>{''.join(cells)}</td>"
                 else:
@@ -382,14 +436,17 @@ def generate_api_files(models):
             download_url = info.get('download', [{}])[0].get('link', '')
             # Try to find a hash (md5 is common in GL.iNet API)
             md5_hash = info.get('download', [{}])[0].get('md5', '')
+            changelog = (info.get('changelog') or '').strip()
+            changelog_path = f"/api/{model_code_lower}/{s_name}/changelog"
             
-            summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\n"
+            summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\nchangelog: {changelog_path}\n"
             
             all_data[model_code_lower][s_name] = {
                 'version': version,
                 'release_time': release_time,
                 'download': download_url,
-                'md5': md5_hash
+                'md5': md5_hash,
+                'changelog': changelog_path
             }
             
             # Simple structure: api/model/stage/attribute
@@ -415,9 +472,11 @@ def generate_api_files(models):
                 f.write(release_time + '\n')
             with open(os.path.join(stage_path, 'hash'), 'w') as f:
                 f.write(md5_hash + '\n')
+            with open(os.path.join(stage_path, 'changelog'), 'w', encoding='utf-8') as f:
+                f.write(changelog + '\n')
 
-    with open(os.path.join(api_dir, 'all.json'), 'w') as f:
-        json.dump(all_data, f, indent=2)
+    with open(os.path.join(api_dir, 'all.json'), 'w', encoding='utf-8') as f:
+        json.dump(all_data, f, indent=2, ensure_ascii=False)
 
 def main():
     print("Loading models metadata...")
