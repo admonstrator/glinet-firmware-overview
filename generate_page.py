@@ -48,12 +48,24 @@ def extract_changelog(entry):
 
     return ''
 
+def fix_mojibake(text):
+    """Fix double-encoded UTF-8 text (e.g. â€' -> ‑).
+    
+    This occurs when UTF-8 bytes are misinterpreted as Latin-1/Windows-1252.
+    """
+    try:
+        return text.encode('latin-1').decode('utf-8')
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+
 def changelog_to_plain_text(changelog_text):
     """Convert changelog content to plain text by removing HTML markup."""
     if not changelog_text:
         return ''
 
     text = changelog_text
+    # Fix potential mojibake (double-encoded UTF-8 from upstream API)
+    text = fix_mojibake(text)
     # Preserve visual structure for common block/list tags before stripping all tags.
     text = re.sub(r'(?i)<\s*br\s*/?\s*>', '\n', text)
     text = re.sub(r'(?i)</\s*(p|div|h1|h2|h3|h4|h5|h6|li|ul|ol)\s*>', '\n', text)
@@ -70,7 +82,9 @@ def fetch_data(url):
         req.add_header('User-Agent', 'Mozilla/5.0')
         with urllib.request.urlopen(req) as response:
             if response.status == 200:
-                data = json.loads(response.read().decode())
+                raw = response.read()
+                charset = response.headers.get_content_charset('utf-8')
+                data = json.loads(raw.decode(charset))
                 if 'info' in data:
                     return data['info']
     except Exception as e:
