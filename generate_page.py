@@ -105,6 +105,17 @@ def fetch_data_individual(model_codes):
     print(f"\nFetched total {len(all_info)} firmware entries.")
     return {'info': all_info}
 
+def detect_openwrt_base(entry):
+    """Determine the OpenWrt base major version ('24', '25', ...) of an
+    'open' firmware entry from its download filename
+    (e.g. 'mt3000-op-4.9.1-op25_beta1-...bin'). Returns None if unknown."""
+    try:
+        link = entry.get('download', [{}])[0].get('link', '') or ''
+    except (IndexError, AttributeError, TypeError):
+        link = ''
+    match = re.search(r'-op(\d{2})', link)
+    return match.group(1) if match else None
+
 def process_data(data, models_metadata):
     if not data or 'info' not in data:
         return {}
@@ -126,8 +137,10 @@ def process_data(data, models_metadata):
 
         if model_code.endswith('-open'):
             model_code = model_code[:-5]
-            stage = 'BETA_OPEN'
+            base = detect_openwrt_base(entry) or '24'
+            stage = f'BETA_OPEN{base}'
             entry['_is_open'] = True
+            entry['_openwrt_base'] = base
 
         if stage == 'TESTING':
             stage = 'BETA'
@@ -178,10 +191,10 @@ def generate_html(models, models_metadata):
     for m_type in grouped_models:
         grouped_models[m_type].sort(key=get_sort_key)
     
-    # Collect all unique stages to create table headers, exclude internal BETA_OPEN
+    # Collect all unique stages to create table headers, exclude internal BETA_OPEN* variants
     all_stages = set()
     for model in models:
-        all_stages.update(s for s in models[model].keys() if s != 'BETA_OPEN')
+        all_stages.update(s for s in models[model].keys() if not s.startswith('BETA_OPEN'))
     
     # Define a preferred order for columns
     stage_order = ['RELEASE', 'BETA', 'SNAPSHOT', 'RC']
@@ -323,11 +336,14 @@ def generate_html(models, models_metadata):
             """
             for stage in sorted_stages:
                 info = models[code].get(stage)
-                info_open = models[code].get('BETA_OPEN') if stage == 'BETA' else None
-                if info or info_open:
+                # Gather all OpenWrt "open" variants (op24, op25, ...) alongside the BETA column
+                open_stages = sorted(s for s in models[code] if s.startswith('BETA_OPEN')) if stage == 'BETA' else []
+                # (actual_stage, entry) pairs to render in this cell
+                render_list = [(stage, info)] if info else []
+                render_list += [(s, models[code][s]) for s in open_stages]
+                if render_list:
                     cells = []
-                    visible_entries = [i for i in [info, info_open] if i]
-                    for entry_info in visible_entries:
+                    for entry_stage, entry_info in render_list:
                         version = entry_info.get('version', 'N/A')
                         release_time = entry_info.get('release_time', '').split(' ')[0]
                         download_link = "#"
@@ -336,10 +352,13 @@ def generate_html(models, models_metadata):
                         changelog_text = (entry_info.get('changelog') or '').strip()
                         timestamp_html = f'<span class="timestamp">{release_time}</span>'
                         if changelog_text:
-                            stage_name = stage.lower().replace('_open', '-open')
+                            stage_name = entry_stage.lower().replace('_open', '-open')
                             changelog_path = f"api/{code.lower()}/{stage_name}/changelog"
                             timestamp_html = f'<a class="timestamp text-decoration-none" href="{changelog_path}" target="_blank" title="Open latest changelog TXT">{release_time} <i class="fas fa-file-lines small ms-1"></i></a>'
-                        open_badge = '<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt 24 open variant">OP24</span>' if entry_info.get('_is_open') else ''
+                        open_badge = ''
+                        if entry_info.get('_is_open'):
+                            base = entry_info.get('_openwrt_base', '24')
+                            open_badge = f'<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt {base} open variant">OP{base}</span>'
                         cells.append(f'''
                                 <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
                                     <a href="{download_link}" target="_blank" class="fw-version text-decoration-none stage-{stage}">
