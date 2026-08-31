@@ -36,8 +36,8 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 ## ✨ Features
 
 - 🚀 **Automated Tracking** – Daily updates for all GL.iNet models (Routers, IoT, KVM)
-- 🔍 **Link Validation** – Every download link is verified with a `HEAD` request, retried on temporary failures. An unreachable link never changes which version is listed; it is flagged instead
-- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) lists every download that could not be reached, with the reason and the number of attempts
+- 🔍 **Link Validation** – Every download link is verified with a `HEAD` request, retried on temporary failures. An unreachable link never changes which version is listed; it is flagged instead, and the newest older build that still downloads is offered as a second link
+- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) lists every download that could not be reached, with the reason, the number of attempts and the latest reachable build
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
 - 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
 - ⚡ **Last Updated Badges** – Track exactly when the data was last verified
@@ -59,7 +59,7 @@ This project serves as a machine-readable API. You can access version informatio
 | `/api/<model>/<stage>/hash` | Returns the MD5 hash (if available) |
 | `/api/<model>/<stage>/changelog` | Returns the latest changelog as plain text (TXT) |
 
-`/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content. Each entry also carries `link_ok`, which is `false` when the download link did not respond during the last build; the per-stage summary at `/api/<model>/<stage>/` shows the same as a `link:` line.
+`/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content. Each entry also carries `link_ok`, which is `false` when the download link did not respond during the last build; the per-stage summary at `/api/<model>/<stage>/` shows the same as a `link:` line. When a link is down and an older build still downloads, the entry gains `latest_reachable` (`version`, `release_time`, `download`) and the summary a matching `latest_reachable:` line. The reported `version` is always the newest one GL.iNet publishes, whether or not its download responds.
 
 **Example:**
 `curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`

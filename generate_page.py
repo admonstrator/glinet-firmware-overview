@@ -25,6 +25,11 @@ LINK_BACKOFF = (1, 3)  # seconds to wait before attempt 2 and attempt 3
 RETRY_BUDGET = 180
 _retry_budget_left = RETRY_BUDGET
 
+# When the newest build's download is unreachable, how many older builds to
+# probe for one that still downloads. Those probes get a single attempt each so
+# one broken model cannot eat the whole retry budget.
+FALLBACK_CANDIDATES = 5
+
 IS_GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
 
 # Stream the build log instead of flushing it in one block at the end of the step.
@@ -73,7 +78,7 @@ def attempt_link(url):
     except Exception as e:
         return False, f"{type(e).__name__}: {e}", True, time.monotonic() - started
 
-def check_link(url):
+def check_link(url, max_attempts=LINK_ATTEMPTS):
     """HEAD the URL, retrying transient failures within the global budget.
 
     Returns (ok, reason, attempts, duration). The reason explains the failure
@@ -86,7 +91,7 @@ def check_link(url):
 
     total = 0.0
     reason = "not checked"
-    for attempt in range(1, LINK_ATTEMPTS + 1):
+    for attempt in range(1, max_attempts + 1):
         if attempt > 1:
             if _retry_budget_left <= 0:
                 return False, f"{reason}, no retry budget left", attempt - 1, round(total, 2)
@@ -104,7 +109,24 @@ def check_link(url):
         if not retryable:
             return False, reason, attempt, round(total, 2)
 
-    return False, reason, LINK_ATTEMPTS, round(total, 2)
+    return False, reason, max_attempts, round(total, 2)
+
+def find_reachable_fallback(candidates):
+    """Newest older build whose download still responds, or None.
+
+    Used only when the current build's own download is unreachable, so that
+    the overview can still offer something downloadable.
+    """
+    checked = 0
+    for candidate in candidates[:FALLBACK_CANDIDATES]:
+        link = entry_link(candidate)
+        if not link:
+            continue
+        checked += 1
+        ok, _reason, _attempts, _duration = check_link(link, max_attempts=1)
+        if ok:
+            return candidate, link, checked
+    return None, '', checked
 
 def extract_changelog(entry):
     """Extract changelog text from known API field variants."""
@@ -265,15 +287,27 @@ def process_data(data, models_metadata):
         problems = []
 
         for stage in sorted(buckets[model_code]):
-            newest = max(buckets[model_code][stage],
-                         key=lambda e: e.get('release_time', ''))
+            candidates = sorted(buckets[model_code][stage],
+                                key=lambda e: e.get('release_time', ''),
+                                reverse=True)
+            newest = candidates[0]
             link = entry_link(newest)
             ok, reason, attempts, duration = check_link(link)
+
+            # The newest version stays published either way, but when its own
+            # download is dead, offer the newest older build that still works.
+            fallback, fallback_link, probed = (None, '', 0)
+            if not ok:
+                fallback, fallback_link, probed = find_reachable_fallback(candidates[1:])
 
             stored = dict(newest)
             stored['changelog'] = changelog_to_plain_text(extract_changelog(newest))
             stored['_link_ok'] = ok
             stored['_link_reason'] = reason
+            if fallback is not None:
+                stored['_fallback_version'] = fallback.get('version', 'N/A')
+                stored['_fallback_link'] = fallback_link
+                stored['_fallback_release_time'] = fallback.get('release_time', '')
             models[model_code][stage] = stored
 
             version = newest.get('version', 'N/A')
@@ -288,28 +322,46 @@ def process_data(data, models_metadata):
                 'reason': reason,
                 'attempts': attempts,
                 'duration': duration,
+                'candidates_probed': probed,
+                'fallback_version': fallback.get('version', 'N/A') if fallback else None,
+                'fallback_release_time': fallback.get('release_time', '') if fallback else '',
+                'fallback_link': fallback_link,
             })
 
             if ok:
                 summary.append(f"{stage} {version}")
+            elif fallback is not None:
+                summary.append(f"{stage} {version} (link dead, offering "
+                               f"{fallback.get('version', 'N/A')})")
+                problems.append(diagnostics[-1])
             else:
                 summary.append(f"{stage} {version} (link unreachable)")
-                problems.append((stage, version, link, reason, attempts, duration))
+                problems.append(diagnostics[-1])
 
         log_progress(f"[{idx+1}/{total}] {model_code}: " + " · ".join(summary))
 
-        for stage, version, link, reason, attempts, duration in problems:
-            tries = "attempt" if attempts == 1 else "attempts"
-            print(f"  WARNING {model_code} ({stage}) {version}: download unreachable after "
-                  f"{attempts} {tries} ({reason}, {duration}s). Version is still published.")
-            print(f"          {link or '<no link>'}")
-            log_annotation('warning', f"{model_code} ({stage}) {version}: download link "
-                                      f"unreachable ({reason}) after {attempts} {tries}")
+        for d in problems:
+            tries = "attempt" if d['attempts'] == 1 else "attempts"
+            print(f"  WARNING {model_code} ({d['stage']}) {d['version']}: download unreachable after "
+                  f"{d['attempts']} {tries} ({d['reason']}, {d['duration']}s). "
+                  f"Version is still published.")
+            print(f"          {d['link'] or '<no link>'}")
+            if d['fallback_version']:
+                print(f"          offering {d['fallback_version']} instead as the newest reachable "
+                      f"download ({d['candidates_probed']} older build(s) probed)")
+                extra = f", offering {d['fallback_version']} as the newest reachable download"
+            else:
+                extra = (f", and none of the {d['candidates_probed']} older build(s) probed responded"
+                         if d['candidates_probed'] else "")
+            log_annotation('warning', f"{model_code} ({d['stage']}) {d['version']}: download link "
+                                      f"unreachable ({d['reason']}) after {d['attempts']} {tries}{extra}")
 
     unreachable = sum(1 for d in diagnostics if d['status'] == 'unreachable')
-    attempts = sum(d['attempts'] for d in diagnostics)
+    with_fallback = sum(1 for d in diagnostics if d['fallback_version'])
+    attempts = sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)
+    offered = f" ({with_fallback} with an older reachable build to offer)" if unreachable else ""
     print(f"Processing complete: {len(diagnostics)} model/stage entries, {attempts} HEAD requests, "
-          f"{unreachable} unreachable download{'' if unreachable == 1 else 's'}. "
+          f"{unreachable} unreachable download{'' if unreachable == 1 else 's'}{offered}. "
           f"Retry budget left: {max(0, round(_retry_budget_left))}s of {RETRY_BUDGET}s.")
     return models, diagnostics
 
@@ -376,6 +428,8 @@ def generate_html(models, models_metadata, diagnostics):
         .stage-TESTING {{ color: #dc3545; }}
         .stage-RC {{ color: #fd7e14; }}
         
+        .fallback-link {{ font-size: 0.75rem; font-family: monospace; color: #6c757d; }}
+        .fallback-link:hover {{ color: #0d6efd; }}
         .model-type {{ font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; letter-spacing: 1px; }}
         .api-info {{ background: #e9ecef; border-radius: 8px; padding: 20px; margin-bottom: 30px; }}
         code {{ background: #f1f3f5; padding: 2px 4px; border-radius: 4px; color: #d63384; }}
@@ -510,6 +564,7 @@ def generate_html(models, models_metadata, diagnostics):
                         if entry_info.get('_is_open'):
                             base = entry_info.get('_openwrt_base', '24')
                             open_badge = f'<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt {base} open variant">OP{base}</span>'
+                        fallback_html = ''
                         if entry_info.get('_link_ok', True):
                             version_html = (f'<a href="{download_link}" target="_blank" '
                                             f'class="fw-version text-decoration-none stage-{stage}">'
@@ -522,10 +577,18 @@ def generate_html(models, models_metadata, diagnostics):
                             version_html = (f'<span class="fw-version text-muted">{version}</span> '
                                             f'<a href="status.html" class="text-decoration-none" title="{hint}">'
                                             f'<i class="fas fa-triangle-exclamation small text-warning"></i></a>')
+                            if entry_info.get('_fallback_link'):
+                                fb_version = entry_info['_fallback_version']
+                                fb_link = html_lib.escape(entry_info['_fallback_link'], quote=True)
+                                fallback_html = (
+                                    f'<a href="{fb_link}" target="_blank" class="fallback-link text-decoration-none" '
+                                    f'title="Newest version with a working download">'
+                                    f'<i class="fas fa-download small me-1"></i>{fb_version} instead</a>')
                         cells.append(f'''
                                 <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
                                     {version_html}
                                     <div>{timestamp_html}{open_badge}</div>
+                                    {fallback_html}
                                 </div>''')
                     html += f"<td>{''.join(cells)}</td>"
                 else:
@@ -638,7 +701,7 @@ def generate_status_html(diagnostics, empty_models):
     esc = html_lib.escape
 
     unreachable = [d for d in diagnostics if d['status'] == 'unreachable']
-    attempts = sum(d['attempts'] for d in diagnostics)
+    attempts = sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)
 
     html = STATUS_PAGE_HEAD
     html += f"""
@@ -660,8 +723,9 @@ def generate_status_html(diagnostics, empty_models):
             attempts for temporary failures). A link that does not respond never changes which version is
             listed &ndash; showing an older release as the current one would be worse than showing the
             current one without a working download. Instead the entry keeps its version, and on the
-            overview its download is greyed out and marked with a warning sign
-            (<i class="fas fa-triangle-exclamation text-warning"></i>).
+            overview its download is greyed out and flagged with a warning sign. Where an older build
+            still downloads, the overview offers that one as a second link so there is always
+            something to grab.
         </p>
         <p class="mb-0 small">
             A <span class="badge bg-warning text-dark">timeout</span> is usually temporary and resolves
@@ -720,7 +784,7 @@ def generate_status_html(diagnostics, empty_models):
                             <th scope="col">Released</th>
                             <th scope="col">Reason</th>
                             <th scope="col">Attempts</th>
-                            <th scope="col">Took</th>
+                            <th scope="col">Latest reachable</th>
                             <th scope="col">File</th>
                         </tr>
                     </thead>
@@ -730,6 +794,15 @@ def generate_status_html(diagnostics, empty_models):
             filename = d['link'].rsplit('/', 1)[-1] if d['link'] else ''
             file_cell = (f'<a class="file-link" href="{esc(d["link"], quote=True)}" target="_blank" '
                          f'rel="noopener">{esc(filename)}</a>') if d['link'] else '<span class="text-muted">-</span>'
+            if d['fallback_version']:
+                fallback_cell = (
+                    f'<a class="fw-version text-decoration-none" href="{esc(d["fallback_link"], quote=True)}" '
+                    f'target="_blank" rel="noopener"><i class="fas fa-download small me-1"></i>'
+                    f'{esc(d["fallback_version"])}</a>'
+                    f'<div class="timestamp">{esc(d["fallback_release_time"].split(" ")[0])}</div>')
+            else:
+                fallback_cell = (f'<span class="text-muted small">none '
+                                 f'({d["candidates_probed"]} probed)</span>')
             html += f"""
                         <tr>
                             <td class="ps-4">
@@ -741,17 +814,19 @@ def generate_status_html(diagnostics, empty_models):
                             <td><span class="timestamp">{esc(d['release_time'].split(' ')[0])}</span></td>
                             <td><span class="reason">{esc(d['reason'])}</span></td>
                             <td>{d['attempts']}</td>
-                            <td><span class="timestamp">{d['duration']}s</span></td>
+                            <td>{fallback_cell}</td>
                             <td>{file_cell}</td>
                         </tr>"""
-        html += """
+        html += f"""
                     </tbody>
                 </table>
             </div>
         </div>
         <div class="card-footer bg-white small text-muted">
             These versions are still listed on the overview &ndash; only their download link did not
-            respond during this build.
+            respond during this build. <em>Latest reachable</em> is the newest older build whose download
+            still works (up to {FALLBACK_CANDIDATES} are probed); the overview offers it as a
+            second link so there is always something to download.
         </div>
     </div>
 """
@@ -778,7 +853,8 @@ def write_step_summary(diagnostics, empty_models):
 
     lines = ['## Firmware link check', '']
     lines.append(f"- Model/stage entries: **{len(diagnostics)}**")
-    lines.append(f"- HEAD requests: **{sum(d['attempts'] for d in diagnostics)}**")
+    lines.append(f"- HEAD requests: "
+                 f"**{sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)}**")
     lines.append(f"- Unreachable downloads: **{len(unreachable)}**")
     lines.append(f"- Models without API data: **{len(empty_models)}**")
     lines.append('')
@@ -790,10 +866,12 @@ def write_step_summary(diagnostics, empty_models):
     if unreachable:
         lines.append('The versions below are still published; only their download link failed.')
         lines.append('')
-        lines.append('| Model | Stage | Version | Reason | Attempts |')
-        lines.append('| --- | --- | --- | --- | --- |')
+        lines.append('| Model | Stage | Version | Reason | Attempts | Latest reachable |')
+        lines.append('| --- | --- | --- | --- | --- | --- |')
         for d in sorted(unreachable, key=lambda d: (d['model'], d['stage'])):
-            lines.append(f"| {d['model']} | {d['stage']} | {d['version']} | `{d['reason']}` | {d['attempts']} |")
+            fallback = d['fallback_version'] or f"none ({d['candidates_probed']} probed)"
+            lines.append(f"| {d['model']} | {d['stage']} | {d['version']} | `{d['reason']}` "
+                         f"| {d['attempts']} | {fallback} |")
     else:
         lines.append('\u2705 Every download link responded.')
 
@@ -854,6 +932,16 @@ def generate_api_files(models, diagnostics, empty_models):
                 'changelog': changelog_path,
                 'link_ok': link_ok
             }
+
+            # Only present when this entry's own download did not respond.
+            if info.get('_fallback_link'):
+                all_data[model_code_lower][s_name]['latest_reachable'] = {
+                    'version': info['_fallback_version'],
+                    'release_time': info.get('_fallback_release_time', ''),
+                    'download': info['_fallback_link'],
+                }
+                summary_content += (f"latest_reachable: {info['_fallback_version']} "
+                                    f"{info['_fallback_link']}\n")
             
             # Simple structure: api/model/stage/attribute
             stage_path = os.path.join(model_dir, s_name)
@@ -891,7 +979,7 @@ def generate_api_files(models, diagnostics, empty_models):
         'link_attempts': LINK_ATTEMPTS,
         'summary': {
             'entries': len(diagnostics),
-            'head_requests': sum(d['attempts'] for d in diagnostics),
+            'head_requests': sum(d['attempts'] + d['candidates_probed'] for d in diagnostics),
             'unreachable': len(unreachable),
             'models_without_api_data': len(empty_models),
         },
