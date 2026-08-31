@@ -1,0 +1,49 @@
+name: Verify head (temporary)
+
+# Throwaway verification branch: runs the build on a GitHub runner without the
+# Pages deploy, to prove the current head works there before it is merged.
+
+on:
+  push:
+    branches:
+      - claude/verify-head-temp
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Build without deploying
+        run: |
+          python3 fetch_all_models.py
+          python3 generate_page.py
+      - name: Sanity-check the generated output
+        run: |
+          set -e
+          test -s index.html
+          test -s status.html
+          test -s api/all.json
+          test -s api/status.json
+          python3 - <<'PY'
+          import json, sys
+          all_data = json.load(open('api/all.json'))
+          status = json.load(open('api/status.json'))
+          assert all_data, "all.json is empty"
+          for model, stages in all_data.items():
+              for stage, e in stages.items():
+                  assert e['version'], f"{model}/{stage} has no version"
+                  assert 'link_ok' in e, f"{model}/{stage} missing link_ok"
+                  if not e['link_ok'] and 'latest_reachable' in e:
+                      assert e['latest_reachable']['download'], "empty fallback URL"
+          s = status['summary']
+          assert s['entries'] == sum(len(v) for v in all_data.values()), "entry count mismatch"
+          assert s['head_requests'] >= s['entries'], "fewer requests than entries"
+          print(f"OK: {s['entries']} entries, {s['head_requests']} HEAD requests, "
+                f"{s['unreachable']} unreachable, {s['models_without_api_data']} models without API data")
+          PY
