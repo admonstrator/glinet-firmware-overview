@@ -37,6 +37,7 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 
 - 🚀 **Automated Tracking** – Daily updates for all GL.iNet models (Routers, IoT, KVM)
 - 🔍 **Link Validation** – Automatically verifies that firmware download links are active
+- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) explains every failed link check and why an entry is showing an older version
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
 - 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
 - ⚡ **Last Updated Badges** – Track exactly when the data was last verified
@@ -50,6 +51,7 @@ This project serves as a machine-readable API. You can access version informatio
 | Endpoint | Description |
 |----------|-------------|
 | `/api/all.json` | Consolidated JSON of all tracked models and versions |
+| `/api/status.json` | Build report: failed link checks, entries showing an older version, models the API returned no data for |
 | `/api/<model>/branches` | Text file listing available firmware stages for a model |
 | `/api/<model>/<stage>/version` | Returns only the version string (e.g., `4.5.0`) |
 | `/api/<model>/<stage>/url` | Returns the direct download URL for the firmware |
