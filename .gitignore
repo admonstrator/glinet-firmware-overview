@@ -1,5 +1,6 @@
 api/
 index.html
+status.html
 models.json
 test_api.py
 test_comma.py

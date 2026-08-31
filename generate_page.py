@@ -1,26 +1,132 @@
 import urllib.request
+import urllib.error
 import json
 import html as html_lib
 import re
+import socket
+import sys
 from datetime import datetime
 import os
 import time
 
 API_URL = "https://firmware-api.gl-inet.com/cloud-api/model/info"
 
-def check_link(url):
-    """Performs a HEAD request to check if the URL exists."""
-    if not url or url == "#":
-        return False
+# Seconds a firmware download link gets to answer a single HEAD request. A
+# healthy answer takes well under a second, so this is generous on purpose.
+LINK_TIMEOUT = 8
+
+# Transient failures (timeout, reset, 5xx, 429) are retried; a 404 is not.
+LINK_ATTEMPTS = 3
+LINK_BACKOFF = (1, 3)  # seconds to wait before attempt 2 and attempt 3
+
+# Upper bound on the extra time retries may cost across one whole run, so a bad
+# day upstream cannot turn a 90 second build into an hour of waiting. Once it is
+# used up the remaining links get a single attempt each.
+RETRY_BUDGET = 180
+_retry_budget_left = RETRY_BUDGET
+
+# When the newest build's download is unreachable, how many older builds to
+# probe for one that still downloads. Those probes get a single attempt each so
+# one broken model cannot eat the whole retry budget.
+FALLBACK_CANDIDATES = 5
+
+IS_GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
+
+# Stream the build log instead of flushing it in one block at the end of the step.
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except AttributeError:  # Python < 3.7
+    pass
+
+def log_progress(message):
+    """Progress output: transient on a terminal, a real log line in CI."""
+    if sys.stdout.isatty():
+        print(message, end="\r")
+    else:
+        print(message)
+
+def log_annotation(level, message):
+    """Emit a GitHub Actions annotation so problems show up on the run page."""
+    if IS_GITHUB_ACTIONS:
+        # Annotations are single-line; encode newlines the way Actions expects.
+        print(f"::{level}::{message.replace(chr(10), '%0A')}")
+
+def attempt_link(url):
+    """One HEAD request. Returns (ok, reason, retryable, duration).
+
+    A 4xx answer is the server telling us the file is not there, so it is
+    final. Timeouts, resets, 5xx and 429 are worth another try.
+    """
+    started = time.monotonic()
     try:
         req = urllib.request.Request(url, method='HEAD')
         req.add_header('User-Agent', 'Mozilla/5.0')
-        with urllib.request.urlopen(req, timeout=5) as response:
-            return response.status == 200
-    except Exception:
-        return False
+        with urllib.request.urlopen(req, timeout=LINK_TIMEOUT) as response:
+            duration = time.monotonic() - started
+            ok = response.status == 200
+            return ok, f"HTTP {response.status}", not ok and response.status >= 500, duration
+    except urllib.error.HTTPError as e:
+        retryable = e.code == 429 or e.code >= 500
+        return False, f"HTTP {e.code} {e.reason}", retryable, time.monotonic() - started
+    except urllib.error.URLError as e:
+        duration = time.monotonic() - started
+        if isinstance(e.reason, (socket.timeout, TimeoutError)):
+            return False, "timeout", True, duration
+        return False, f"{type(e.reason).__name__}: {e.reason}", True, duration
+    except (socket.timeout, TimeoutError):
+        return False, "timeout", True, time.monotonic() - started
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}", True, time.monotonic() - started
 
-import time
+def check_link(url, max_attempts=LINK_ATTEMPTS):
+    """HEAD the URL, retrying transient failures within the global budget.
+
+    Returns (ok, reason, attempts, duration). The reason explains the failure
+    for the build log and the status page instead of collapsing it into a bool.
+    """
+    global _retry_budget_left
+
+    if not url or url == "#":
+        return False, "no download URL in API response", 0, 0.0
+
+    total = 0.0
+    reason = "not checked"
+    for attempt in range(1, max_attempts + 1):
+        if attempt > 1:
+            if _retry_budget_left <= 0:
+                return False, f"{reason}, no retry budget left", attempt - 1, round(total, 2)
+            wait = LINK_BACKOFF[attempt - 2]
+            time.sleep(wait)
+            total += wait
+            _retry_budget_left -= wait
+
+        ok, reason, retryable, duration = attempt_link(url)
+        total += duration
+        if attempt > 1:
+            _retry_budget_left -= duration
+        if ok:
+            return True, reason, attempt, round(total, 2)
+        if not retryable:
+            return False, reason, attempt, round(total, 2)
+
+    return False, reason, max_attempts, round(total, 2)
+
+def find_reachable_fallback(candidates):
+    """Newest older build whose download still responds, or None.
+
+    Used only when the current build's own download is unreachable, so that
+    the overview can still offer something downloadable.
+    """
+    checked = 0
+    for candidate in candidates[:FALLBACK_CANDIDATES]:
+        link = entry_link(candidate)
+        if not link:
+            continue
+        checked += 1
+        ok, _reason, _attempts, _duration = check_link(link, max_attempts=1)
+        if ok:
+            return candidate, link, checked
+    return None, '', checked
 
 def extract_changelog(entry):
     """Extract changelog text from known API field variants."""
@@ -88,22 +194,30 @@ def fetch_data(url):
                 if 'info' in data:
                     return data['info']
     except Exception as e:
-        print(f"\nError fetching URL {url}: {e}")
-        pass
+        message = f"API request failed for {url}: {type(e).__name__}: {e}"
+        print(f"  ERROR {message}")
+        log_annotation('error', message)
     return []
 
 def fetch_data_individual(model_codes):
     all_info = []
+    empty_models = []
+    model_codes = list(model_codes)
     total = len(model_codes)
     for idx, model in enumerate(model_codes):
-        url = f"{API_URL}?model={model}"
-        print(f"Fetching firmware info for {model} ({idx+1}/{total})...", end="\r")
-        all_info.extend(fetch_data(url))
-        all_info.extend(fetch_data(f"{API_URL}?model={model}-open"))
+        entries = fetch_data(f"{API_URL}?model={model}")
+        entries += fetch_data(f"{API_URL}?model={model}-open")
+        log_progress(f"[{idx+1}/{total}] {model}: {len(entries)} firmware entries")
+        if not entries:
+            message = f"{model}: API returned no firmware entries"
+            print(f"  WARNING {message}")
+            log_annotation('warning', message)
+            empty_models.append(model)
+        all_info.extend(entries)
         time.sleep(0.1) # Be nice to the API
-    
-    print(f"\nFetched total {len(all_info)} firmware entries.")
-    return {'info': all_info}
+
+    print(f"Fetched {len(all_info)} firmware entries for {total} models.")
+    return {'info': all_info}, empty_models
 
 def detect_openwrt_base(entry):
     """Determine the OpenWrt base major version ('24', '25', ...) of an
@@ -116,22 +230,13 @@ def detect_openwrt_base(entry):
     match = re.search(r'-op(\d{2})', link)
     return match.group(1) if match else None
 
-def process_data(data, models_metadata):
-    if not data or 'info' not in data:
-        return {}
-
-    # Structure: models[model_code][stage] = firmware_info
-    models = {}
-    
-    # Initialize with all known models from metadata
-    for code in models_metadata:
-        models[code] = {}
-
-    total_entries = len(data['info'])
-    for idx, entry in enumerate(data['info']):
+def bucket_entries(entries):
+    """Group API entries into buckets[model_code][stage] = [entry, ...]."""
+    buckets = {}
+    for entry in entries:
         model_code = entry.get('model')
         stage = entry.get('stage')
-        
+
         if not model_code or not stage:
             continue
 
@@ -145,35 +250,122 @@ def process_data(data, models_metadata):
         if stage == 'TESTING':
             stage = 'BETA'
 
-        if model_code not in models:
-            models[model_code] = {}
+        buckets.setdefault(model_code, {}).setdefault(stage, []).append(entry)
+    return buckets
 
-        # Check if this entry is newer or the first one we see for this stage
-        current_stored = models[model_code].get(stage)
-        is_newer = False
-        if not current_stored or entry.get('release_time', '') > current_stored.get('release_time', ''):
-            is_newer = True
-        
-        if is_newer:
-            # Validate the link before storing it
-            download_link = "#"
-            if 'download' in entry and entry['download']:
-                 download_link = entry['download'][0].get('link', '#')
-            
-            print(f"[{idx+1}/{total_entries}] Validating link for {model_code} ({stage})...", end="\r")
-            if check_link(download_link):
-                selected_entry = dict(entry)
-                selected_entry['changelog'] = changelog_to_plain_text(extract_changelog(entry))
-                models[model_code][stage] = selected_entry
+def entry_link(entry):
+    if entry.get('download'):
+        return entry['download'][0].get('link', '') or ''
+    return ''
+
+def process_data(data, models_metadata):
+    """Keep the newest firmware the API reports per model and stage.
+
+    The download link is verified, but a link that does not respond never
+    changes which version is published: reporting an older release as the
+    current one is worse than reporting the current one without a working
+    download. An unreachable link is marked as such instead, and the reason
+    ends up in the build log, on the status page and in /api/status.json.
+    """
+    if not data or 'info' not in data:
+        return {}, []
+
+    buckets = bucket_entries(data['info'])
+
+    # Structure: models[model_code][stage] = firmware_info
+    models = {code: {} for code in models_metadata}
+    diagnostics = []
+
+    # Keep the metadata order so the log matches the fetch order above.
+    ordered_codes = [c for c in models_metadata if c in buckets]
+    ordered_codes += [c for c in buckets if c not in models_metadata]
+    total = len(ordered_codes)
+
+    for idx, model_code in enumerate(ordered_codes):
+        models.setdefault(model_code, {})
+        summary = []
+        problems = []
+
+        for stage in sorted(buckets[model_code]):
+            candidates = sorted(buckets[model_code][stage],
+                                key=lambda e: e.get('release_time', ''),
+                                reverse=True)
+            newest = candidates[0]
+            link = entry_link(newest)
+            ok, reason, attempts, duration = check_link(link)
+
+            # The newest version stays published either way, but when its own
+            # download is dead, offer the newest older build that still works.
+            fallback, fallback_link, probed = (None, '', 0)
+            if not ok:
+                fallback, fallback_link, probed = find_reachable_fallback(candidates[1:])
+
+            stored = dict(newest)
+            stored['changelog'] = changelog_to_plain_text(extract_changelog(newest))
+            stored['_link_ok'] = ok
+            stored['_link_reason'] = reason
+            if fallback is not None:
+                stored['_fallback_version'] = fallback.get('version', 'N/A')
+                stored['_fallback_link'] = fallback_link
+                stored['_fallback_release_time'] = fallback.get('release_time', '')
+            models[model_code][stage] = stored
+
+            version = newest.get('version', 'N/A')
+            diagnostics.append({
+                'model': model_code,
+                'name': models_metadata.get(model_code, {}).get('name', model_code),
+                'stage': stage,
+                'status': 'ok' if ok else 'unreachable',
+                'version': version,
+                'release_time': newest.get('release_time', ''),
+                'link': link,
+                'reason': reason,
+                'attempts': attempts,
+                'duration': duration,
+                'candidates_probed': probed,
+                'fallback_version': fallback.get('version', 'N/A') if fallback else None,
+                'fallback_release_time': fallback.get('release_time', '') if fallback else '',
+                'fallback_link': fallback_link,
+            })
+
+            if ok:
+                summary.append(f"{stage} {version}")
+            elif fallback is not None:
+                summary.append(f"{stage} {version} (link dead, offering "
+                               f"{fallback.get('version', 'N/A')})")
+                problems.append(diagnostics[-1])
             else:
-                # If the newer one is broken, keep the old one if it exists and was valid
-                # Or just don't store it. For now, we only store if valid.
-                pass
+                summary.append(f"{stage} {version} (link unreachable)")
+                problems.append(diagnostics[-1])
 
-    print(f"\nProcessing complete.")
-    return models
+        log_progress(f"[{idx+1}/{total}] {model_code}: " + " · ".join(summary))
 
-def generate_html(models, models_metadata):
+        for d in problems:
+            tries = "attempt" if d['attempts'] == 1 else "attempts"
+            print(f"  WARNING {model_code} ({d['stage']}) {d['version']}: download unreachable after "
+                  f"{d['attempts']} {tries} ({d['reason']}, {d['duration']}s). "
+                  f"Version is still published.")
+            print(f"          {d['link'] or '<no link>'}")
+            if d['fallback_version']:
+                print(f"          offering {d['fallback_version']} instead as the newest reachable "
+                      f"download ({d['candidates_probed']} older build(s) probed)")
+                extra = f", offering {d['fallback_version']} as the newest reachable download"
+            else:
+                extra = (f", and none of the {d['candidates_probed']} older build(s) probed responded"
+                         if d['candidates_probed'] else "")
+            log_annotation('warning', f"{model_code} ({d['stage']}) {d['version']}: download link "
+                                      f"unreachable ({d['reason']}) after {d['attempts']} {tries}{extra}")
+
+    unreachable = sum(1 for d in diagnostics if d['status'] == 'unreachable')
+    with_fallback = sum(1 for d in diagnostics if d['fallback_version'])
+    attempts = sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)
+    offered = f" ({with_fallback} with an older reachable build to offer)" if unreachable else ""
+    print(f"Processing complete: {len(diagnostics)} model/stage entries, {attempts} HEAD requests, "
+          f"{unreachable} unreachable download{'' if unreachable == 1 else 's'}{offered}. "
+          f"Retry budget left: {max(0, round(_retry_budget_left))}s of {RETRY_BUDGET}s.")
+    return models, diagnostics
+
+def generate_html(models, models_metadata, diagnostics):
     # Group models by type
     grouped_models = {'ROUTER': [], 'IOT': [], 'KVM': []}
     for code in models.keys():
@@ -199,6 +391,15 @@ def generate_html(models, models_metadata):
     # Define a preferred order for columns
     stage_order = ['RELEASE', 'BETA', 'SNAPSHOT', 'RC']
     sorted_stages = [s for s in stage_order if s in all_stages] + [s for s in sorted(all_stages) if s not in stage_order]
+
+    issue_count = sum(1 for d in diagnostics if d['status'] != 'ok')
+    if issue_count:
+        status_link = (f'<a href="status.html" class="text-decoration-none">'
+                       f'<i class="fas fa-triangle-exclamation text-warning"></i> '
+                       f'{issue_count} download{"" if issue_count == 1 else "s"} unreachable</a>')
+    else:
+        status_link = ('<a href="status.html" class="text-decoration-none">'
+                       '<i class="fas fa-circle-check text-success"></i> All links verified</a>')
 
     html = f"""
 <!DOCTYPE html>
@@ -227,6 +428,8 @@ def generate_html(models, models_metadata):
         .stage-TESTING {{ color: #dc3545; }}
         .stage-RC {{ color: #fd7e14; }}
         
+        .fallback-link {{ font-size: 0.75rem; font-family: monospace; color: #6c757d; }}
+        .fallback-link:hover {{ color: #0d6efd; }}
         .model-type {{ font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; letter-spacing: 1px; }}
         .api-info {{ background: #e9ecef; border-radius: 8px; padding: 20px; margin-bottom: 30px; }}
         code {{ background: #f1f3f5; padding: 2px 4px; border-radius: 4px; color: #d63384; }}
@@ -244,7 +447,8 @@ def generate_html(models, models_metadata):
             <div class="mb-2">
                 <span class="badge bg-info text-dark">Community Project by <a href="https://admon.me" target="_blank" class="text-dark text-decoration-none fw-bold">admon (admon.me)</a></span>
             </div>
-            <p class="timestamp">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+            <p class="timestamp mb-1">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+            <p class="timestamp">{status_link}</p>
         </div>
     </div>
 
@@ -278,6 +482,7 @@ def generate_html(models, models_metadata):
                                 <li><strong>Latest changelog:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/changelog</code></li>
                                 <li><strong>Specific attributes:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/[version|url|date|hash|changelog]</code></li>
                                 <li><strong>Consolidated data:</strong> <code>/api/all.json</code></li>
+                                <li><strong>Build &amp; link status:</strong> <code>/api/status.json</code> (see the <a href="status.html">status page</a>)</li>
                             </ul>
                         </div>
                     </div>
@@ -359,12 +564,31 @@ def generate_html(models, models_metadata):
                         if entry_info.get('_is_open'):
                             base = entry_info.get('_openwrt_base', '24')
                             open_badge = f'<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt {base} open variant">OP{base}</span>'
+                        fallback_html = ''
+                        if entry_info.get('_link_ok', True):
+                            version_html = (f'<a href="{download_link}" target="_blank" '
+                                            f'class="fw-version text-decoration-none stage-{stage}">'
+                                            f'{version} <i class="fas fa-download small ms-1"></i></a>')
+                        else:
+                            # The version stays published; only the download is marked as broken.
+                            hint = html_lib.escape(
+                                f"Download link unreachable ({entry_info.get('_link_reason', 'unknown')}) "
+                                f"- see the status page", quote=True)
+                            version_html = (f'<span class="fw-version text-muted">{version}</span> '
+                                            f'<a href="status.html" class="text-decoration-none" title="{hint}">'
+                                            f'<i class="fas fa-triangle-exclamation small text-warning"></i></a>')
+                            if entry_info.get('_fallback_link'):
+                                fb_version = entry_info['_fallback_version']
+                                fb_link = html_lib.escape(entry_info['_fallback_link'], quote=True)
+                                fallback_html = (
+                                    f'<a href="{fb_link}" target="_blank" class="fallback-link text-decoration-none" '
+                                    f'title="Newest version with a working download">'
+                                    f'<i class="fas fa-download small me-1"></i>{fb_version} instead</a>')
                         cells.append(f'''
                                 <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
-                                    <a href="{download_link}" target="_blank" class="fw-version text-decoration-none stage-{stage}">
-                                        {version} <i class="fas fa-download small ms-1"></i>
-                                    </a>
+                                    {version_html}
                                     <div>{timestamp_html}{open_badge}</div>
+                                    {fallback_html}
                                 </div>''')
                     html += f"<td>{''.join(cells)}</td>"
                 else:
@@ -432,7 +656,230 @@ def generate_html(models, models_metadata):
     """
     return html
 
-def generate_api_files(models):
+STATUS_PAGE_HEAD = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Status - GL.iNet Firmware Overview</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 20px; }
+        .card { margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none; }
+        .card-header { background-color: #343a40; color: white; font-weight: bold; padding: 12px 20px; }
+        .timestamp { font-size: 0.8rem; color: #6c757d; }
+        .stat-card { background: #fff; border-radius: 8px; padding: 18px; text-align: center;
+                     box-shadow: 0 4px 6px rgba(0,0,0,0.08); height: 100%; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; line-height: 1.1; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; }
+        .reason { font-family: monospace; font-size: 0.85rem; }
+        .fw-version { font-family: monospace; font-weight: bold; }
+        .file-link { font-family: monospace; font-size: 0.75rem; word-break: break-all; }
+        .section-title { margin-bottom: 15px; font-weight: bold; color: #495057;
+                         display: flex; align-items: center; }
+        .section-title i { margin-right: 10px; }
+        footer { margin-top: 50px; padding: 40px 0; text-align: center; color: #6c757d;
+                 font-size: 0.9rem; border-top: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+<div class="container">
+"""
+
+def stat_card(value, label, color=''):
+    color_class = f' text-{color}' if color else ''
+    return f"""
+        <div class="col-6 col-md-4 col-lg-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-value{color_class}">{value}</div>
+                <div class="stat-label">{label}</div>
+            </div>
+        </div>"""
+
+def generate_status_html(diagnostics, empty_models):
+    esc = html_lib.escape
+
+    unreachable = [d for d in diagnostics if d['status'] == 'unreachable']
+    attempts = sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)
+
+    html = STATUS_PAGE_HEAD
+    html += f"""
+    <div class="row justify-content-center">
+        <div class="col-12 text-center mb-4">
+            <h1><i class="fas fa-heart-pulse text-primary"></i> Build &amp; Link Status</h1>
+            <p class="lead">Which firmware downloads could not be reached</p>
+            <p class="timestamp mb-1">Last build: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+            <p class="timestamp"><a href="index.html" class="text-decoration-none">
+                <i class="fas fa-arrow-left"></i> Back to the firmware overview</a></p>
+        </div>
+    </div>
+
+    <div class="alert alert-light border shadow-sm">
+        <h5 class="alert-heading"><i class="fas fa-circle-info text-primary me-2"></i>How the check works</h5>
+        <p class="mb-2 small">
+            The overview always lists the newest firmware the GL.iNet API reports. Its download link is
+            verified with a <code>HEAD</code> request ({LINK_TIMEOUT}s timeout, up to {LINK_ATTEMPTS}
+            attempts for temporary failures). A link that does not respond never changes which version is
+            listed &ndash; showing an older release as the current one would be worse than showing the
+            current one without a working download. Instead the entry keeps its version, and on the
+            overview its download is greyed out and flagged with a warning sign. Where an older build
+            still downloads, the overview offers that one as a second link so there is always
+            something to grab.
+        </p>
+        <p class="mb-0 small">
+            A <span class="badge bg-warning text-dark">timeout</span> is usually temporary and resolves
+            itself on the next daily run. An <span class="badge bg-danger">HTTP 404</span> means the file
+            is really gone from GL.iNet's server; that one will not fix itself.
+        </p>
+    </div>
+
+    <div class="row justify-content-center mb-4">"""
+
+    html += stat_card(len(diagnostics), 'Model / stage entries')
+    html += stat_card(attempts, 'HEAD requests')
+    html += stat_card(len(unreachable), 'Unreachable downloads', 'danger' if unreachable else 'success')
+    html += stat_card(len(empty_models), 'Models without API data', 'danger' if empty_models else 'success')
+    html += """
+    </div>
+"""
+
+    if not unreachable and not empty_models:
+        html += """
+    <div class="alert alert-success shadow-sm">
+        <i class="fas fa-circle-check me-2"></i>
+        Every tracked model and stage is showing the newest firmware the GL.iNet API reports,
+        and every download link responded. Nothing to report.
+    </div>
+"""
+
+    if empty_models:
+        html += """
+    <h3 class="section-title"><i class="fas fa-plug-circle-xmark text-danger"></i> Models without API data</h3>
+    <div class="card">
+        <div class="card-body">
+            <p class="small mb-2">
+                The GL.iNet API returned no firmware entries for these models during this build, so they
+                carry no versions on the overview. This is almost always a temporary API hiccup.
+            </p>
+            <p class="mb-0">"""
+        html += ' '.join(f'<span class="badge bg-secondary">{esc(m)}</span>' for m in empty_models)
+        html += """</p>
+        </div>
+    </div>
+"""
+
+    if unreachable:
+        html += """
+    <h3 class="section-title"><i class="fas fa-link-slash text-danger"></i> Unreachable downloads</h3>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" class="ps-4" style="min-width: 200px;">Model</th>
+                            <th scope="col">Stage</th>
+                            <th scope="col">Version</th>
+                            <th scope="col">Released</th>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Attempts</th>
+                            <th scope="col">Latest reachable</th>
+                            <th scope="col">File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+"""
+        for d in sorted(unreachable, key=lambda d: (d['model'], d['stage'])):
+            filename = d['link'].rsplit('/', 1)[-1] if d['link'] else ''
+            file_cell = (f'<a class="file-link" href="{esc(d["link"], quote=True)}" target="_blank" '
+                         f'rel="noopener">{esc(filename)}</a>') if d['link'] else '<span class="text-muted">-</span>'
+            if d['fallback_version']:
+                fallback_cell = (
+                    f'<a class="fw-version text-decoration-none" href="{esc(d["fallback_link"], quote=True)}" '
+                    f'target="_blank" rel="noopener"><i class="fas fa-download small me-1"></i>'
+                    f'{esc(d["fallback_version"])}</a>'
+                    f'<div class="timestamp">{esc(d["fallback_release_time"].split(" ")[0])}</div>')
+            else:
+                fallback_cell = (f'<span class="text-muted small">none '
+                                 f'({d["candidates_probed"]} probed)</span>')
+            html += f"""
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">{esc(d['name'])}</div>
+                                <div class="text-muted small" style="font-size: 0.7rem;">{esc(d['model'])}</div>
+                            </td>
+                            <td>{esc(d['stage'])}</td>
+                            <td><span class="fw-version">{esc(d['version'])}</span></td>
+                            <td><span class="timestamp">{esc(d['release_time'].split(' ')[0])}</span></td>
+                            <td><span class="reason">{esc(d['reason'])}</span></td>
+                            <td>{d['attempts']}</td>
+                            <td>{fallback_cell}</td>
+                            <td>{file_cell}</td>
+                        </tr>"""
+        html += f"""
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white small text-muted">
+            These versions are still listed on the overview &ndash; only their download link did not
+            respond during this build. <em>Latest reachable</em> is the newest older build whose download
+            still works (up to {FALLBACK_CANDIDATES} are probed); the overview offers it as a
+            second link so there is always something to download.
+        </div>
+    </div>
+"""
+
+    html += """
+    <footer>
+        <p class="mb-0">Machine-readable version of this page: <code><a href="api/status.json">/api/status.json</a></code></p>
+        <p class="mb-0 mt-3 small">Data is automatically verified and updated daily from GL.iNet Firmware API.</p>
+    </footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+"""
+    return html
+
+def write_step_summary(diagnostics, empty_models):
+    """Render the same findings into the GitHub Actions job summary."""
+    path = os.environ.get('GITHUB_STEP_SUMMARY')
+    if not path:
+        return
+
+    unreachable = [d for d in diagnostics if d['status'] == 'unreachable']
+
+    lines = ['## Firmware link check', '']
+    lines.append(f"- Model/stage entries: **{len(diagnostics)}**")
+    lines.append(f"- HEAD requests: "
+                 f"**{sum(d['attempts'] + d['candidates_probed'] for d in diagnostics)}**")
+    lines.append(f"- Unreachable downloads: **{len(unreachable)}**")
+    lines.append(f"- Models without API data: **{len(empty_models)}**")
+    lines.append('')
+
+    if empty_models:
+        lines.append(f"\u26a0\ufe0f No API data for: {', '.join(empty_models)}")
+        lines.append('')
+
+    if unreachable:
+        lines.append('The versions below are still published; only their download link failed.')
+        lines.append('')
+        lines.append('| Model | Stage | Version | Reason | Attempts | Latest reachable |')
+        lines.append('| --- | --- | --- | --- | --- | --- |')
+        for d in sorted(unreachable, key=lambda d: (d['model'], d['stage'])):
+            fallback = d['fallback_version'] or f"none ({d['candidates_probed']} probed)"
+            lines.append(f"| {d['model']} | {d['stage']} | {d['version']} | `{d['reason']}` "
+                         f"| {d['attempts']} | {fallback} |")
+    else:
+        lines.append('\u2705 Every download link responded.')
+
+    lines.append('')
+    with open(path, 'a', encoding='utf-8') as f:
+        f.write('\n'.join(lines) + '\n')
+
+def generate_api_files(models, diagnostics, empty_models):
     api_dir = 'api'
     if os.path.exists(api_dir):
         import shutil
@@ -471,16 +918,30 @@ def generate_api_files(models):
             md5_hash = info.get('download', [{}])[0].get('md5', '')
             changelog = (info.get('changelog') or '').strip()
             changelog_path = f"https://glinet-firmware.admon.me/api/{model_code_lower}/{s_name}/changelog"
-            
-            summary_content = f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\ndate: {release_time}\nchangelog: {changelog_path}\n"
-            
+            link_ok = info.get('_link_ok', True)
+            link_state = 'ok' if link_ok else f"unreachable ({info.get('_link_reason', 'unknown')})"
+
+            summary_content = (f"version: {version}\nhash: {md5_hash}\ndownload: {download_url}\n"
+                               f"date: {release_time}\nchangelog: {changelog_path}\nlink: {link_state}\n")
+
             all_data[model_code_lower][s_name] = {
                 'version': version,
                 'release_time': release_time,
                 'download': download_url,
                 'md5': md5_hash,
-                'changelog': changelog_path
+                'changelog': changelog_path,
+                'link_ok': link_ok
             }
+
+            # Only present when this entry's own download did not respond.
+            if info.get('_fallback_link'):
+                all_data[model_code_lower][s_name]['latest_reachable'] = {
+                    'version': info['_fallback_version'],
+                    'release_time': info.get('_fallback_release_time', ''),
+                    'download': info['_fallback_link'],
+                }
+                summary_content += (f"latest_reachable: {info['_fallback_version']} "
+                                    f"{info['_fallback_link']}\n")
             
             # Simple structure: api/model/stage/attribute
             stage_path = os.path.join(model_dir, s_name)
@@ -511,6 +972,23 @@ def generate_api_files(models):
     with open(os.path.join(api_dir, 'all.json'), 'w', encoding='utf-8') as f:
         json.dump(all_data, f, indent=2, ensure_ascii=False)
 
+    unreachable = [d for d in diagnostics if d['status'] == 'unreachable']
+    status_data = {
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+        'link_timeout_seconds': LINK_TIMEOUT,
+        'link_attempts': LINK_ATTEMPTS,
+        'summary': {
+            'entries': len(diagnostics),
+            'head_requests': sum(d['attempts'] + d['candidates_probed'] for d in diagnostics),
+            'unreachable': len(unreachable),
+            'models_without_api_data': len(empty_models),
+        },
+        'models_without_api_data': empty_models,
+        'unreachable': unreachable,
+    }
+    with open(os.path.join(api_dir, 'status.json'), 'w', encoding='utf-8') as f:
+        json.dump(status_data, f, indent=2, ensure_ascii=False)
+
 def main():
     print("Loading models metadata...")
     models_metadata = {}
@@ -523,23 +1001,29 @@ def main():
         exit(1)
 
     print(f"Fetching firmware data for {len(models_metadata)} models...")
-    raw_data = fetch_data_individual(models_metadata.keys())
-    
+    raw_data, empty_models = fetch_data_individual(models_metadata.keys())
+
     if raw_data and raw_data.get('info'):
-        print(f"Data fetched. Processing {len(raw_data['info'])} entries...")
-        models = process_data(raw_data, models_metadata)
-        
+        print(f"Data fetched. Validating download links for {len(raw_data['info'])} entries...")
+        models, diagnostics = process_data(raw_data, models_metadata)
+
         print("Generating API files...")
-        generate_api_files(models)
-        
+        generate_api_files(models, diagnostics, empty_models)
+
         print(f"Generating HTML for {len(models)} models...")
-        html_content = generate_html(models, models_metadata)
-        
         with open('index.html', 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print("Done. index.html and api/ files created.")
+            f.write(generate_html(models, models_metadata, diagnostics))
+
+        print("Generating status page...")
+        with open('status.html', 'w', encoding='utf-8') as f:
+            f.write(generate_status_html(diagnostics, empty_models))
+
+        write_step_summary(diagnostics, empty_models)
+        print("Done. index.html, status.html and api/ files created.")
     else:
-        print("Failed to fetch or process data.")
+        message = "Failed to fetch or process data: the API returned no firmware entries at all."
+        print(message)
+        log_annotation('error', message)
         exit(1)
 
 
