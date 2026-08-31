@@ -36,8 +36,8 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 ## ✨ Features
 
 - 🚀 **Automated Tracking** – Daily updates for all GL.iNet models (Routers, IoT, KVM)
-- 🔍 **Link Validation** – Automatically verifies that firmware download links are active
-- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) explains every failed link check and why an entry is showing an older version
+- 🔍 **Link Validation** – Every download link is verified with a `HEAD` request, retried on temporary failures. An unreachable link never changes which version is listed; it is flagged instead
+- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) lists every download that could not be reached, with the reason and the number of attempts
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
 - 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
 - ⚡ **Last Updated Badges** – Track exactly when the data was last verified
@@ -51,7 +51,7 @@ This project serves as a machine-readable API. You can access version informatio
 | Endpoint | Description |
 |----------|-------------|
 | `/api/all.json` | Consolidated JSON of all tracked models and versions |
-| `/api/status.json` | Build report: failed link checks, entries showing an older version, models the API returned no data for |
+| `/api/status.json` | Build report: unreachable downloads with reason and attempt count, models the API returned no data for |
 | `/api/<model>/branches` | Text file listing available firmware stages for a model |
 | `/api/<model>/<stage>/version` | Returns only the version string (e.g., `4.5.0`) |
 | `/api/<model>/<stage>/url` | Returns the direct download URL for the firmware |
@@ -59,7 +59,7 @@ This project serves as a machine-readable API. You can access version informatio
 | `/api/<model>/<stage>/hash` | Returns the MD5 hash (if available) |
 | `/api/<model>/<stage>/changelog` | Returns the latest changelog as plain text (TXT) |
 
-`/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content.
+`/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content. Each entry also carries `link_ok`, which is `false` when the download link did not respond during the last build; the per-stage summary at `/api/<model>/<stage>/` shows the same as a `link:` line.
 
 **Example:**
 `curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`
