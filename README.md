@@ -107,6 +107,6 @@ This project is part of a comprehensive collection of tools for GL.iNet routers.
 
 <div align="center">
 
-_Last updated: 2026-08-31_
+_Last updated: 2026-09-01_
 
 </div>
