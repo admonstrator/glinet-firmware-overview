@@ -155,9 +155,15 @@ def check(root, no_external_assets=False):
                                 problems.append(f'{rel}: entry {i} without <{tag}>')
                         for link in entry.findall(f'{ATOM}link'):
                             href = link.get('href', '')
-                            local = resolve(dirpath, href, root)
-                            if local is not None and not existing(local):
+                            target, _, frag = href.partition('#')
+                            local = resolve(dirpath, target, root)
+                            if local is None:
+                                continue
+                            found = existing(local)
+                            if not found:
                                 problems.append(f'{rel}: entry {i} links to missing {href}')
+                            elif frag and found.endswith('.html') and frag not in parse_page(found).ids:
+                                problems.append(f'{rel}: entry {i} links to missing anchor {href}')
     return problems
 
 
