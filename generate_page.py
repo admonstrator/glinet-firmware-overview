@@ -1,6 +1,5 @@
 import urllib.request
 import urllib.error
-import urllib.parse
 import json
 import html as html_lib
 import re
@@ -74,52 +73,6 @@ PAGE_STYLE = """
         .model-link .fa-link { font-size: 0.7em; opacity: 0.4; }
         .changelog-text { white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; background: #f1f3f5; border-radius: 8px; padding: 15px; margin: 0; }
         details summary { cursor: pointer; }
-        .share-bar .btn { padding: 0.15rem 0.55rem; font-size: 0.8rem; }
-"""
-
-# Copy-link / native share behaviour of the share bar (progressive enhancement:
-# the network buttons are plain links and work without JavaScript).
-SHARE_SCRIPT = """
-<script>
-    document.querySelectorAll('.share-bar').forEach(function(bar) {
-        var url = bar.dataset.shareUrl, title = bar.dataset.shareTitle;
-        var copy = bar.querySelector('.share-copy');
-        var done = function() {
-            var original = copy.innerHTML;
-            copy.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-            setTimeout(function() { copy.innerHTML = original; }, 2000);
-        };
-        // Older browsers, or contexts where the async clipboard API is blocked:
-        // select the link in a temporary field and use the legacy copy command.
-        var legacyCopy = function() {
-            var field = document.createElement('textarea');
-            field.value = url;
-            field.setAttribute('readonly', '');
-            field.style.position = 'fixed';
-            field.style.opacity = '0';
-            document.body.appendChild(field);
-            field.select();
-            var ok = false;
-            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-            document.body.removeChild(field);
-            if (ok) { done(); } else { window.prompt('Copy this link:', url); }
-        };
-        copy.addEventListener('click', function() {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(done, legacyCopy);
-            } else {
-                legacyCopy();
-            }
-        });
-        var native = bar.querySelector('.share-native');
-        if (navigator.share) {
-            native.classList.remove('d-none');
-            native.addEventListener('click', function() {
-                navigator.share({ title: title, url: url }).catch(function() {});
-            });
-        }
-    });
-</script>
 """
 
 # Seconds a firmware download link gets to answer a single HEAD request. A
@@ -529,31 +482,6 @@ def favicon_links_html(root=''):
     <link rel="apple-touch-icon" sizes="180x180" href="{root}images/apple-touch-icon.png">
     <meta name="theme-color" content="{THEME_COLOR}">"""
 
-def share_bar_html(url, title):
-    """Row of share buttons: common networks as plain links, plus copy-link and
-    (where the browser supports it) the native share sheet via SHARE_SCRIPT."""
-    q_url = urllib.parse.quote(url, safe='')
-    q_text = urllib.parse.quote(title, safe='')
-    networks = [
-        ('X', 'fa-brands fa-x-twitter', f'https://x.com/intent/post?url={q_url}&text={q_text}'),
-        ('Reddit', 'fa-brands fa-reddit-alien', f'https://www.reddit.com/submit?url={q_url}&title={q_text}'),
-        ('Facebook', 'fa-brands fa-facebook-f', f'https://www.facebook.com/sharer/sharer.php?u={q_url}'),
-        ('Telegram', 'fa-brands fa-telegram', f'https://t.me/share/url?url={q_url}&text={q_text}'),
-        ('WhatsApp', 'fa-brands fa-whatsapp', f'https://wa.me/?text={q_text}%20{q_url}'),
-        ('Email', 'fa-solid fa-envelope', f'mailto:?subject={q_text}&body={q_url}'),
-    ]
-    buttons = []
-    for name, icon, href in networks:
-        target = ' target="_blank" rel="noopener"' if href.startswith('http') else ''
-        buttons.append(f'<a href="{href}"{target} class="btn btn-outline-secondary" title="Share via {name}">'
-                       f'<i class="{icon}"></i><span class="visually-hidden">{name}</span></a>')
-    return f"""<div class="share-bar d-flex flex-wrap justify-content-center align-items-center gap-1" data-share-url="{html_lib.escape(url, quote=True)}" data-share-title="{html_lib.escape(title, quote=True)}">
-                <span class="timestamp me-1"><i class="fas fa-share-nodes me-1"></i>Share:</span>
-                {''.join(buttons)}
-                <button type="button" class="btn btn-outline-secondary share-copy" title="Copy link to clipboard"><i class="fas fa-link me-1"></i>Copy link</button>
-                <button type="button" class="btn btn-outline-secondary share-native d-none" title="Open the share sheet"><i class="fas fa-arrow-up-from-bracket me-1"></i>Share&hellip;</button>
-            </div>"""
-
 def html_head(title, description='', canonical='', root=''):
     """Shared <head>: Bootstrap, Font Awesome, common styles, favicons and the
     Open Graph / Twitter Card tags that give shared links a preview."""
@@ -584,7 +512,7 @@ def html_head(title, description='', canonical='', root=''):
     <meta name="twitter:image" content="{og_image}">{extra}
 {favicon_links_html(root)}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>{PAGE_STYLE}    </style>
 </head>"""
 
@@ -650,7 +578,6 @@ def generate_html(models, models_metadata, diagnostics, generated_at=None):
             </div>
             <p class="timestamp mb-1">Last updated: {generated_at}</p>
             <p class="timestamp">{status_link}</p>
-            {share_bar_html(f"{SITE_URL}/", SITE_NAME)}
         </div>
     </div>
 
@@ -837,7 +764,7 @@ def generate_html(models, models_metadata, diagnostics, generated_at=None):
         });
     });
 </script>
-""" + SHARE_SCRIPT + """
+
 </body>
 </html>
     """
@@ -999,7 +926,6 @@ def generate_device_page(code, stages, meta, generated_at):
             </div>
             <p class="timestamp mb-1">Last updated: {generated_at}</p>
             <p class="timestamp">Permalink: <a href="{canonical}" class="text-decoration-none font-monospace">{canonical}</a></p>
-            {share_bar_html(canonical, f"{full_name} firmware - {SITE_NAME}")}
         </div>
     </div>
 {firmware_section}
@@ -1024,7 +950,7 @@ def generate_device_page(code, stages, meta, generated_at):
         </div>
     </footer>
 </div>
-{SHARE_SCRIPT}
+
 </body>
 </html>
 """
@@ -1066,7 +992,7 @@ STATUS_PAGE_HEAD = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Build Status - GL.iNet Firmware Overview</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 """ + favicon_links_html() + """
     <style>
         body { background-color: #f8f9fa; padding-top: 20px; }
@@ -1432,8 +1358,6 @@ def main():
         print(message)
         log_annotation('error', message)
         exit(1)
-
-
 
 if __name__ == "__main__":
     main()
