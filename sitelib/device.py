@@ -3,189 +3,163 @@ import html as html_lib
 import os
 import shutil
 
-from sitelib.core import *  # noqa: F401,F403
-from sitelib.design import *  # noqa: F401,F403
+from sitelib.core import (DEVICE_PAGE_MARKER, DOCS_DIR, RESERVED_ROOT_NAMES, SITE_NAME, SITE_URL, age_text,
+                          api_stage_name, build_date, days_since, device_page_url, entry_link, feed_url, is_fresh,
+                          latest_update, ordered_stages, parse_generated_at, split_name, stage_class, stage_title)
+from sitelib.design import icon, page_head, site_footer, site_header
+from sitelib.overview import CATEGORY_IDS, CATEGORY_LABELS, open_tag
+
+DEVICE_CSS = """
+.buildcard .stage.rc { color: var(--rc); }
+.buildcard .stage .tag { vertical-align: 2px; margin-left: 4px; }
+.buildcard .v.dead { color: var(--muted); }
+.buildcard .d .tag { margin-left: 6px; }
+.btn.alt { background: transparent; color: var(--ink); border: 1px solid var(--frost); padding: 6px 13px; }
+.btn.alt:hover { background: var(--ice); }
+.warnline { display: flex; gap: 8px; align-items: baseline; margin: 10px 0 0; font-size: 14px; }
+.warnline .ico { color: var(--rc); position: relative; top: 2px; }
+.md5 { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.md5 code { font: 12.5px var(--code); word-break: break-all; }
+.nobuilds { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0; }
+.term { padding-top: 30px; }
+.term h2 { font: 600 19px/1.2 var(--display); margin: 0 0 10px; }
+.term pre { font: 13.5px/1.65 var(--code); background: var(--deep); color: var(--on-deep); padding: 14px 18px; border-radius: 12px; overflow-x: auto; margin: 0 0 12px; }
+.term pre .c { color: var(--on-deep-2); }
+.term p { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; }
+.term p a { display: inline-flex; gap: 6px; align-items: center; }
+@media (max-width: 960px) {
+  footer .cols { grid-template-columns: minmax(0, 1fr); }
+}
+"""
+
+
+def esc(text, quote=False):
+    return html_lib.escape(str(text), quote=quote)
+
+
+def date_html(entry, now):
+    d = build_date(entry)
+    if d is None:
+        return ''
+    return f'Released <time datetime="{d.isoformat()}" title="{age_text(days_since(entry, now))}">{d.isoformat()}</time>'
+
+
+def build_block(stage, entry, now, open_changelog):
+    """One stage: version, date, "new" tag, download (or warning and fallback), MD5, changelog."""
+    s_api = api_stage_name(stage)
+    cls = stage_class(stage)
+    version = esc(entry.get('version', 'N/A'))
+    tag = open_tag(stage, entry)
+    stage_name = 'Beta' if tag else stage_title(stage, entry)
+    fresh = '<span class="tag fresh">new</span>' if is_fresh(entry, now) else ''
+    link_ok = entry.get('_link_ok', True)
+    link = entry_link(entry)
+    action = ''
+    warn = ''
+    if link_ok and link:
+        action = f'<a class="btn" href="{esc(link, quote=True)}">{icon("dl")}Download</a>'
+    elif not link_ok:
+        reason = esc(entry.get('_link_reason') or 'unknown')
+        if entry.get('_fallback_link'):
+            fb_version = esc(entry.get('_fallback_version', ''))
+            action = (f'<a class="btn alt" href="{esc(entry["_fallback_link"], quote=True)}" '
+                      f'title="Newest build whose download works">{icon("dl")}Download {fb_version} instead</a>')
+            detail = f'{fb_version} is the newest build that still downloads.'
+        else:
+            detail = 'No older build downloads either.'
+        warn = (f'\n      <p class="warnline">{icon("warn")}<span>The download of {version} did not respond in the last check '
+                f'({reason}). {detail} <a href="../status.html">Link status</a></span></p>')
+    md5 = ((entry.get('download') or [{}])[0].get('md5') or '').strip()
+    md5_html = f'\n      <p class="md5">MD5 <code>{esc(md5)}</code></p>' if md5 else ''
+    changelog = (entry.get('changelog') or '').strip()
+    changelog_html = ''
+    if changelog:
+        changelog_html = (f'\n      <details{" open" if open_changelog else ""}><summary>Changelog</summary>'
+                          f'<pre>{esc(changelog)}</pre></details>')
+    return f"""
+    <article class="buildcard" id="{s_api}">
+      <div class="row">
+        <span class="stage {cls}">{stage_name}{tag}</span>
+        <span class="v{'' if link_ok else ' dead'}">{version}</span>
+        <span class="d">{date_html(entry, now)}{fresh}</span>
+        {action}
+      </div>{warn}{md5_html}{changelog_html}
+    </article>"""
+
+
+def terminal_html(code, first_stage):
+    """Compact 'Use it from the terminal' part with this device's curl commands."""
+    slug = code.lower()
+    lines = ['<span class="c"># This page as plain text</span>', f'curl {SITE_URL}/{slug}']
+    if first_stage:
+        s_api = api_stage_name(first_stage)
+        lines += [f'<span class="c"># Latest {stage_title(first_stage).lower()} version, then download it</span>',
+                  f'curl {SITE_URL}/api/{slug}/{s_api}/version',
+                  f'curl -LO "$(curl -s {SITE_URL}/api/{slug}/{s_api}/url)"']
+    return f"""
+  <section class="term" id="terminal">
+    <h2>Use it from the terminal</h2>
+<pre>{chr(10).join(lines)}</pre>
+    <p><a href="{feed_url(code, root='../')}">{icon("feed")}Feed for this device</a><a href="../{DOCS_DIR}/">{icon("code")}API and terminal docs</a></p>
+  </section>"""
+
 
 def generate_device_page(code, stages, meta, generated_at):
     """Build the standalone HTML page of a single model, served at /<model>/."""
-    code_lower = code.lower()
-    full_name = meta.get('name', code)
-    m_type = meta.get('type', 'ROUTER')
-    icon = TYPE_ICONS.get(m_type, 'fa-microchip')
-    type_name = TYPE_NAMES.get(m_type, m_type)
-    esc_name = html_lib.escape(full_name)
-    esc_code = html_lib.escape(code)
-    canonical = f"{SITE_URL}/{device_page_url(code)}"
-    # Device pages live one directory level below the site root
+    now = parse_generated_at(generated_at)
     root = '../'
-    api_rel = f"{root}api/{code_lower}"
-    api_abs = f"{SITE_URL}/api/{code_lower}"
-
+    name = meta.get('name', code)
+    nick, sku = split_name(name, code)
+    m_type = meta.get('type', 'ROUTER')
     display_stages = ordered_stages(stages)
 
-    summary_parts = []
-    rows = []
-    changelog_blocks = []
-    endpoint_items = []
-    for stage in display_stages:
-        info = stages[stage]
-        s_api = api_stage_name(stage)
-        label = base_stage(stage)
-        version = info.get('version', 'N/A')
-        esc_version = html_lib.escape(version)
-        release_time = info.get('release_time', '')
-        release_date = release_time.split(' ')[0]
-        download_link = html_lib.escape(entry_link(info) or '#', quote=True)
-        md5_hash = (info.get('download') or [{}])[0].get('md5', '') or ''
-        changelog_text = (info.get('changelog') or '').strip()
-        badge = open_badge_html(info)
-        link_ok = info.get('_link_ok', True)
+    display = f'{nick} ({sku})' if sku else nick
+    versions = ', '.join(f'{stage_title(s, stages[s])} {stages[s].get("version", "N/A")}' for s in display_stages)
+    description = (f'Latest GL.iNet firmware for the {name} ({code.lower()}): {versions}.' if versions else
+                   f'GL.iNet firmware for the {name} ({code.lower()}): no firmware listed at the moment.')
 
-        summary_parts.append(f"{stage_label(stage, info)} {version}")
+    lead = ''
+    stage, entry = latest_update(stages)
+    if entry is not None and build_date(entry) is not None:
+        d = build_date(entry).isoformat()
+        lead = (f'Last update <time datetime="{d}" title="{d}">{age_text(days_since(entry, now))}</time> '
+                f'({esc(stage_title(stage, entry))} {esc(entry.get("version", ""))})')
 
-        hash_html = f'<div class="timestamp font-monospace" title="MD5">MD5 {html_lib.escape(md5_hash)}</div>' if md5_hash else ''
-        if link_ok:
-            version_html = f'<span class="fw-version">{esc_version}</span>'
-            download_cell = (f'<a href="{download_link}" target="_blank" class="btn btn-sm btn-outline-primary text-nowrap">'
-                             f'<i class="fas fa-download me-1"></i>Download</a>')
-        else:
-            # The version stays published; only the download is marked as broken (same rule as the overview).
-            hint = html_lib.escape(
-                f"Download link unreachable ({info.get('_link_reason', 'unknown')}) - see the status page", quote=True)
-            version_html = f'<span class="fw-version text-muted">{esc_version}</span>'
-            download_cell = (f'<a href="{root}status.html" class="badge bg-warning text-dark text-decoration-none" title="{hint}">'
-                             f'<i class="fas fa-triangle-exclamation me-1"></i>Unreachable</a>')
-            if info.get('_fallback_link'):
-                fb_link = html_lib.escape(info['_fallback_link'], quote=True)
-                fb_version = html_lib.escape(info.get('_fallback_version', 'N/A'))
-                download_cell += (f'<div class="mt-1"><a href="{fb_link}" target="_blank" class="btn btn-sm btn-outline-secondary text-nowrap" '
-                                  f'title="Newest version with a working download"><i class="fas fa-download me-1"></i>{fb_version} instead</a></div>')
+    head = page_head(
+        f'{display} firmware, {SITE_NAME} (unofficial)',
+        description=description,
+        canonical=f'{SITE_URL}/{device_page_url(code)}',
+        root=root,
+        feeds=[(f'{nick} firmware', feed_url(code, root=root)), ('All devices', feed_url(root=root))],
+        extra_css=DEVICE_CSS,
+    )
+    # The marker right after the doctype lets remove_stale_device_pages() recognise generated pages.
+    head = head.replace('<!DOCTYPE html>\n', f'<!DOCTYPE html>\n{DEVICE_PAGE_MARKER}\n', 1)
+    crumbs = [('All devices', root),
+              (CATEGORY_LABELS.get(m_type, 'Routers'), f'{root}#{CATEGORY_IDS.get(m_type, "router")}'),
+              (nick, None)]
+    header = site_header(root, nick, lead=lead, crumbs=crumbs, sku=esc(sku))
 
-        if changelog_text:
-            changelog_cell = f'<a href="#changelog-{s_api}" class="text-decoration-none" title="Jump to changelog"><i class="fas fa-file-lines me-1"></i>Changelog</a>'
-            changelog_blocks.append(f"""
-                <details id="changelog-{s_api}" class="mb-3"{' open' if not changelog_blocks else ''}>
-                    <summary class="fw-bold"><span class="stage-{label}">{label}</span>{badge} <span class="fw-version">{esc_version}</span> <span class="timestamp ms-1">{html_lib.escape(release_date)}</span>
-                        <a href="{api_rel}/{s_api}/changelog" target="_blank" class="small text-decoration-none ms-2" title="Open as plain text">TXT <i class="fas fa-arrow-up-right-from-square small"></i></a></summary>
-                    <pre class="changelog-text mt-2">{html_lib.escape(changelog_text)}</pre>
-                </details>""")
-        else:
-            changelog_cell = '<span class="text-muted">-</span>'
-
-        rows.append(f"""
-                        <tr id="{s_api}">
-                            <td class="ps-4"><span class="fw-bold stage-{label}">{label}</span>{badge}</td>
-                            <td>{version_html}{hash_html}</td>
-                            <td class="text-nowrap"><span class="timestamp" title="{html_lib.escape(release_time, quote=True)}">{html_lib.escape(release_date)}</span></td>
-                            <td>{download_cell}</td>
-                            <td>{changelog_cell}</td>
-                        </tr>""")
-
-        attr_links = ' &middot; '.join(
-            f'<a href="{api_rel}/{s_api}/{attr}" target="_blank">{attr}</a>'
-            for attr in ['version', 'url', 'date', 'hash', 'changelog']
-        )
-        endpoint_items.append(f'<li class="mb-1"><strong>{label}{badge}:</strong> <code>{api_abs}/{s_api}/</code> <span class="ms-1">[ {attr_links} ]</span></li>')
-
-    if rows:
-        firmware_section = f"""
-    <h3 class="section-title"><i class="fas fa-download text-primary"></i> Firmware versions</h3>
-    <div class="card">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col" class="ps-4">Stage</th>
-                            <th scope="col">Version</th>
-                            <th scope="col">Released</th>
-                            <th scope="col">Download</th>
-                            <th scope="col">Changelog</th>
-                        </tr>
-                    </thead>
-                    <tbody>{''.join(rows)}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>"""
-        example_stage = api_stage_name(display_stages[0])
+    blocks = []
+    with_changelog = 0
+    for s in display_stages:
+        has_changelog = bool((stages[s].get('changelog') or '').strip())
+        blocks.append(build_block(s, stages[s], now, open_changelog=has_changelog and not with_changelog))
+        with_changelog += has_changelog
+    if blocks:
+        body = f'<div class="builds">{"".join(blocks)}\n  </div>'
     else:
-        firmware_section = """
-    <div class="alert alert-warning shadow-sm" role="alert">
-        <i class="fas fa-triangle-exclamation me-2"></i> No verified firmware download is currently available for this model.
-    </div>"""
-        example_stage = 'release'
-
-    changelog_section = ''
-    if changelog_blocks:
-        changelog_section = f"""
-    <h3 class="section-title"><i class="fas fa-file-lines text-primary"></i> Changelogs</h3>
-    <div class="card">
-        <div class="card-body">{''.join(changelog_blocks)}
-        </div>
-    </div>"""
-
-    description = f"Latest verified GL.iNet firmware for {full_name} ({code})"
-    if summary_parts:
-        description += ": " + ", ".join(summary_parts)
-    description += "."
-
-    head = html_head(f"{full_name} Firmware | {SITE_NAME}", description=description, canonical=canonical, root=root)
-
-    return f"""<!DOCTYPE html>
-{DEVICE_PAGE_MARKER}
-<html lang="en">
-{head}
-<body>
-
-<div class="container">
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb small mb-0">
-            <li class="breadcrumb-item"><a href="{root}" class="text-decoration-none"><i class="fas fa-microchip me-1"></i>GL.iNet Firmware Overview</a></li>
-            <li class="breadcrumb-item"><a href="{root}#{m_type.lower()}" class="text-decoration-none">{html_lib.escape(type_name)}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{esc_name}</li>
-        </ol>
-    </nav>
-
-    <div class="row justify-content-center">
-        <div class="col-12 text-center mb-4">
-            <h1><i class="fas {icon} text-primary"></i> {esc_name}</h1>
-            <p class="lead mb-2">Latest verified firmware versions</p>
-            <div class="mb-2">
-                <span class="badge bg-dark font-monospace">{esc_code}</span>
-                <span class="badge bg-secondary">{html_lib.escape(type_name)}</span>
-            </div>
-            <p class="timestamp mb-1">Last updated: {generated_at}</p>
-            <p class="timestamp">Permalink: <a href="{canonical}" class="text-decoration-none font-monospace">{canonical}</a></p>
-        </div>
-    </div>
-{firmware_section}
-{changelog_section}
-    <h3 class="section-title"><i class="fas fa-code text-primary"></i> API endpoints for this device</h3>
-    <div class="card">
-        <div class="card-body api-info m-0">
-            <ul class="small mb-2">
-                <li class="mb-1"><strong>Available stages:</strong> <code>{api_abs}/branches</code> <span class="ms-1">[ <a href="{api_rel}/branches" target="_blank">open</a> ]</span></li>
-                {''.join(endpoint_items)}
-            </ul>
-            <p class="small mb-0"><strong>Example:</strong> <code>curl -s {api_abs}/{example_stage}/version</code></p>
-        </div>
-    </div>
-
-    <footer>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <p class="mb-2"><a href="{root}" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Back to the firmware overview</a></p>
-                <p class="mb-0 mt-3 small">Data is automatically verified and updated daily from GL.iNet Firmware API.</p>
-            </div>
-        </div>
-    </footer>
-</div>
-
-</body>
-</html>
+        body = ('<div class="builds"><p class="nobuilds">GL.iNet lists no firmware for this device at the moment. '
+                f'The <a href="{root}">overview</a> shows every device that has one.</p></div>')
+    main = f"""<main class="wrap">
+  {body}
+{terminal_html(code, display_stages[0] if display_stages else None)}
+</main>
 """
+    # The footer example asks for /release/version, so it names this device only when it has a release build.
+    example = code.lower() if 'RELEASE' in stages else 'mt3000'
+    return head + header + main + site_footer(root, example_model=example) + '</body>\n</html>\n'
+
 
 def remove_stale_device_pages():
     """Delete root-level directories that hold a device page from a previous run.
@@ -197,6 +171,7 @@ def remove_stale_device_pages():
         with open(page, encoding='utf-8', errors='ignore') as f:
             if DEVICE_PAGE_MARKER in f.read(2048):
                 shutil.rmtree(name)
+
 
 def generate_device_pages(models, models_metadata, generated_at):
     """Write one standalone HTML page per model to <model>/index.html at the site
