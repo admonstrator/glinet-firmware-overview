@@ -1,4 +1,11 @@
 api/
+# Generated device pages live at /<model>/index.html: ignore every root-level
+# directory except the ones that are part of the repository.
+/*/
+!/.github/
+!/.claude/
+!/images/
+!/cloudflare/
 index.html
 status.html
 models.json
