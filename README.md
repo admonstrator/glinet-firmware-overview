@@ -40,6 +40,7 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 - 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) lists every download that could not be reached, with the reason, the number of attempts and the latest reachable build
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
 - 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
+- 🔗 **Device Deep Links** – Every model has its own page at `/<model>/` that can be linked directly
 - ⚡ **Last Updated Badges** – Track exactly when the data was last verified
 
 ---
@@ -63,6 +64,18 @@ This project serves as a machine-readable API. You can access version informatio
 
 **Example:**
 `curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`
+
+---
+
+## 🔗 Device Pages
+
+Every tracked model has its own small page that can be linked directly, e.g. in forum posts:
+
+`https://glinet-firmware.admon.me/<model>/`
+
+**Example:** [https://glinet-firmware.admon.me/mt3000/](https://glinet-firmware.admon.me/mt3000/)
+
+Each page lists all verified firmware stages of the model with version, release date, download link and changelog, plus the API endpoints for that model. The model names in the dashboard link to these pages as well.
 
 ---
 
