@@ -216,6 +216,13 @@ def generate_text_pages(models, models_metadata, generated_at):
         with open(os.path.join(slug, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(redirect_stub_html(f'../#{m_type.lower()}', TYPE_NAMES.get(m_type, m_type)))
 
+    # /new (recently released) - placeholder until the text/feeds agent fills it
+    os.makedirs(NEW_DIR, exist_ok=True)
+    with open(os.path.join(NEW_DIR, 'index.txt'), 'w', encoding='utf-8') as f:
+        f.write(f'Recently released\n\nSee {SITE_URL}/ in a browser.\n')
+    with open(os.path.join(NEW_DIR, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(redirect_stub_html('../#recent', 'Recently released'))
+
     os.makedirs('all', exist_ok=True)
     with open(os.path.join('all', 'index.txt'), 'w', encoding='utf-8') as f:
         f.write(generate_text_all(models, models_metadata, generated_at))

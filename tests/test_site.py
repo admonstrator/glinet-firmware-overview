@@ -31,7 +31,8 @@ class SiteTests(unittest.TestCase):
     def test_core_files_exist(self):
         for rel in ('index.html', 'index.txt', 'status.html', 'docs/index.html', 'docs/index.txt',
                     'cli/index.html', 'cli/index.txt', 'mt3000/index.html', 'mt3000/index.txt',
-                    'mt3000/release/index.txt', 'api/all.json', 'api/models', 'api/mt3000/stages'):
+                    'mt3000/release/index.txt', 'api/all.json', 'api/models', 'api/mt3000/stages',
+                    'new/index.txt', 'new/index.html', 'feed.xml', 'mt3000/feed.xml'):
             self.assertTrue(os.path.isfile(self.path(rel)), rel)
 
     def test_reserved_model_gets_no_page(self):

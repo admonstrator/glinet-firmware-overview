@@ -43,6 +43,7 @@ def generate_html(models, models_metadata, diagnostics, generated_at=None):
         </div>
     </div>
 
+    <div id="recent"></div>
     <div class="row justify-content-center search-container">
         <div class="col-md-8">
             <div class="input-group">
