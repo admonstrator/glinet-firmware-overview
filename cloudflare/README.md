@@ -57,6 +57,27 @@ concat(http.request.uri.path, "/index.txt")
 Rule 2 also spares terminal users the GitHub Pages redirect from `/mt3000` to
 `/mt3000/`, which `curl` would not follow without `-L`.
 
+## Response header rule
+
+GitHub Pages serves the extension-less files under `/api/` as
+`application/octet-stream`, so a browser offers a download instead of showing
+the text. A **Modify Response Header** rule (Rules → Transform Rules → Modify
+Response Header, also live in the zone) fixes that:
+
+Filter expression:
+
+```
+http.host eq "firmware.gl-i.net"
+and starts_with(http.request.uri.path, "/api/")
+and not ends_with(http.request.uri.path, ".json")
+```
+
+Action: *Set static* header `Content-Type` = `text/plain; charset=utf-8`.
+
+The JSON files (`all.json`, `status.json`) keep their `application/json`.
+Cloudflare caches these files per URL, so a response cached before the rule
+was created keeps its old type until the cache entry expires.
+
 ## What this gives you
 
 The generator writes a small menu tree of text pages; the two rules above cover
@@ -78,11 +99,9 @@ always be fetched directly as well (`/index.txt`, `/mt3000/index.txt`).
 
 ## Notes
 
-- `/api/...` is excluded from the rules because everything there is plain text
-  already. Directory URLs under `/api/` without a trailing slash still go through
-  the GitHub Pages redirect, so use the trailing slash or `curl -L`. GitHub Pages
-  serves the extension-less files there as `application/octet-stream`; curl does
-  not care, browsers offer a download.
+- `/api/...` is excluded from the rewrite rules because everything there is
+  plain text already. Directory URLs under `/api/` without a trailing slash still
+  go through the GitHub Pages redirect, so use the trailing slash or `curl -L`.
 - Cloudflare caches `.txt` files by default per URL. GitHub Pages sends
   `Cache-Control: max-age=600`, so a fresh build is visible within ten minutes.
 - The custom domain itself is configured in the GitHub repository under
