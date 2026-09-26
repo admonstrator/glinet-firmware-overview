@@ -5,6 +5,10 @@ for `curl` and for a browser by itself. The generator therefore writes a plain-t
 twin next to every page (`/index.txt`, `/<model>/index.txt`), and a Cloudflare
 **Transform Rule** sends terminal clients there. No Worker is needed.
 
+**Status:** both rules below are live in the zone `gl-i.net` (ruleset phase
+`http_request_transform`, created 2026-09-26). This file documents them so they
+can be recreated or adjusted.
+
 Classic *Page Rules* cannot do this: they only match on the URL, not on the
 User-Agent or Accept header. Transform Rules (their successor) can, and the free
 plan includes them.
@@ -20,7 +24,8 @@ and a *dynamic* path rewrite:
 Filter expression:
 
 ```
-(
+http.host eq "firmware.gl-i.net"
+and (
   http.user_agent contains "curl" or
   http.user_agent contains "Wget" or
   http.user_agent contains "HTTPie" or
@@ -31,6 +36,8 @@ and not starts_with(http.request.uri.path, "/api/")
 and not http.request.uri.path contains "."
 and ends_with(http.request.uri.path, "/")
 ```
+
+The `http.host` check keeps the rule away from other subdomains of the zone.
 
 Path → *Rewrite to* → *Dynamic*:
 
@@ -67,7 +74,9 @@ directly as well (`/index.txt`, `/mt3000/index.txt`).
 
 - `/api/...` is excluded from the rules because everything there is plain text
   already. Directory URLs under `/api/` without a trailing slash still go through
-  the GitHub Pages redirect, so use the trailing slash or `curl -L`.
+  the GitHub Pages redirect, so use the trailing slash or `curl -L`. GitHub Pages
+  serves the extension-less files there as `application/octet-stream`; curl does
+  not care, browsers offer a download.
 - Cloudflare caches `.txt` files by default per URL. GitHub Pages sends
   `Cache-Control: max-age=600`, so a fresh build is visible within ten minutes.
 - The custom domain itself is configured in the GitHub repository under
