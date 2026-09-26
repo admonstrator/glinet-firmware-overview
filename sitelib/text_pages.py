@@ -2,6 +2,7 @@
 
 Cloudflare rewrites requests from those clients to these files, see cloudflare/README.md.
 The pages form a small menu tree:  /  ->  /routers /iot /kvm /all /new  ->  /<model>  ->  /<model>/<stage>
+(/docs/index.txt belongs to sitelib.docs_page, /cli/index.txt is cli.sh.)
 """
 import html as html_lib
 import os
@@ -33,16 +34,24 @@ def text_version(entry):
     version = entry.get('version', 'N/A')
     return version if entry.get('_link_ok', True) else version + '!'
 
-def text_notes(has_open, flagged, indent=''):
+def text_notes(has_open, flagged, indent='', updated=False):
     notes = []
+    if updated:
+        notes.append(f'{indent}UPDATED      age of the newest build of any stage (d days, w weeks, mo months, y years)')
     if has_open:
         notes.append(f'{indent}beta-openNN  OpenWrt NN open build (beta channel)')
     if flagged:
-        notes.append(f'{indent}x.y.z!       download link did not respond in the last build, see {SITE_URL}/status.html')
+        notes.append(f'{indent}x.y.z!       download link did not respond in the last check, see {SITE_URL}/status.html')
     return notes
 
-def text_group_table(codes, models, models_metadata, columns):
-    """Rows of the model table for one group; returns (table, has_open, flagged)."""
+def text_age(stages, now):
+    """Compact age of a device's newest build ('5d', '3w', '4mo'), '-' without builds."""
+    _, entry = latest_update(stages)
+    return age_short(days_since(entry, now) if entry else None)
+
+def text_group_table(codes, models, models_metadata, columns, now=None):
+    """Rows of the model table for one group; returns (table, has_open, flagged).
+    With `now` (a datetime) a right-most UPDATED column shows the age of the newest build."""
     rows, has_open, flagged = [], False, False
     for code in codes:
         cells = []
@@ -55,24 +64,37 @@ def text_group_table(codes, models, models_metadata, columns):
                     has_open = True
             flagged = flagged or any(p.endswith('!') for p in parts)
             cells.append(' '.join(parts) if parts else '-')
-        rows.append([code.lower(), models_metadata.get(code, {}).get('name', code)] + cells)
-    return text_table(rows, ['MODEL', 'NAME'] + columns), has_open, flagged
+        row = [code.lower(), models_metadata.get(code, {}).get('name', code)] + cells
+        rows.append(row + [text_age(models[code], now)] if now else row)
+    headers = ['MODEL', 'NAME'] + columns + (['UPDATED'] if now else [])
+    return text_table(rows, headers), has_open, flagged
+
+def text_checked(generated_at, web=''):
+    """'Checked <build time>' line of every page; `web` adds the browser URL."""
+    return f'Checked {generated_at} - web: {web}' if web else f'Checked {generated_at}'
+
+def plural(n, word):
+    return f'{n} {word}' if n == 1 else f'{n} {word}s'
 
 def generate_text_index(models, models_metadata, generated_at):
     """The menu served to curl as / ."""
     grouped = group_models_by_type(models, models_metadata)
+    recent = recent_builds(models, models_metadata, parse_generated_at(generated_at))
     lines = text_title(SITE_NAME, SITE_URL.split('://', 1)[-1])
     lines += ['Latest verified firmware for GL.iNet routers, IoT and KVM devices.',
-              f'Updated {generated_at} - web: {SITE_URL}/', '']
+              'Unofficial community project, not affiliated with GL.iNet.',
+              text_checked(generated_at, f'{SITE_URL}/'), '']
     rows, n = [], 0
     for m_type in ['ROUTER', 'IOT', 'KVM']:
         codes = grouped.get(m_type, [])
         if not codes:
             continue
         n += 1
-        rows.append([f'  [{n}]', TYPE_NAMES.get(m_type, m_type), f'{len(codes)} models', f'curl {SITE_URL}/{TYPE_SLUGS[m_type]}'])
+        rows.append([f'  [{n}]', TYPE_NAMES.get(m_type, m_type), plural(len(codes), 'model'), f'curl {SITE_URL}/{TYPE_SLUGS[m_type]}'])
     rows.append(['  [*]', 'All models as one table', '', f'curl {SITE_URL}/all'])
+    rows.append(['  [n]', 'Recently released', plural(len(recent), 'build'), f'curl {SITE_URL}/{NEW_DIR}'])
     rows.append(['  [i]', 'Interactive menu', '', f'curl -s {SITE_URL}/cli | sh'])
+    rows.append(['  [d]', 'API & terminal docs', '', f'curl {SITE_URL}/{DOCS_DIR}'])
     lines.append(text_table(rows))
     lines += ['', text_table([
         ['Jump to a device:', f'curl {SITE_URL}/<model>', 'e.g. mt3000, mt6000, be9300'],
@@ -86,10 +108,10 @@ def generate_text_group(m_type, codes, models, models_metadata, generated_at):
     slug = TYPE_SLUGS[m_type]
     columns = [s for s in overview_stage_columns(models) if any(s in models[c] for c in codes)]
     lines = text_title(f'{TYPE_NAMES.get(m_type, m_type)} ({len(codes)})', f'{SITE_URL}/{slug}')
-    lines += [f'Updated {generated_at}', '']
-    table, has_open, flagged = text_group_table(codes, models, models_metadata, columns)
+    lines += [text_checked(generated_at), '']
+    table, has_open, flagged = text_group_table(codes, models, models_metadata, columns, parse_generated_at(generated_at))
     lines.append(table)
-    notes = text_notes(has_open, flagged)
+    notes = text_notes(has_open, flagged, updated=bool(codes))
     if notes:
         lines += [''] + notes
     example = next((c.lower() for c in codes if device_page_url(c)), 'mt3000')
@@ -103,17 +125,18 @@ def generate_text_all(models, models_metadata, generated_at):
     """Every model in one table, served as /all."""
     grouped = group_models_by_type(models, models_metadata)
     columns = overview_stage_columns(models)
+    now = parse_generated_at(generated_at)
     lines = text_title(f'{SITE_NAME} - all models', f'{SITE_URL}/all')
-    lines += [f'Updated {generated_at}', '']
+    lines += [text_checked(generated_at), '']
     has_open = flagged = False
     for m_type in ['ROUTER', 'IOT', 'KVM']:
         codes = grouped.get(m_type, [])
         if not codes:
             continue
-        table, o, f = text_group_table(codes, models, models_metadata, columns)
+        table, o, f = text_group_table(codes, models, models_metadata, columns, now)
         has_open, flagged = has_open or o, flagged or f
         lines += [f'{TYPE_NAMES.get(m_type, m_type)} ({len(codes)})', table, '']
-    notes = text_notes(has_open, flagged)
+    notes = text_notes(has_open, flagged, updated=bool(models))
     if notes:
         lines += notes + ['']
     lines += [text_table([
@@ -127,7 +150,11 @@ def generate_device_text(code, stages, meta, generated_at):
     code_lower = code.lower()
     m_type = meta.get('type', 'ROUTER')
     lines = text_title(f"{meta.get('name', code)} ({code})", TYPE_NAMES.get(m_type, m_type))
-    lines += [f'Updated {generated_at} - web: {SITE_URL}/{code_lower}/', '']
+    newest_stage, newest = latest_update(stages)
+    if newest is not None:
+        age = age_text(days_since(newest, parse_generated_at(generated_at)))
+        lines.append(f"Last update: {age} ({api_stage_name(newest_stage)} {newest.get('version', 'N/A')})")
+    lines += [text_checked(generated_at, f'{SITE_URL}/{code_lower}/'), '']
     ordered = ordered_stages(stages)
     if not ordered:
         lines += ['No verified firmware download is currently available for this model.']
@@ -191,6 +218,32 @@ def generate_stage_text(code, stage, info, meta, generated_at):
     lines += ['', 'Changelog', '---------', changelog if changelog else '(no changelog published for this build)', '']
     return '\n'.join(lines)
 
+def generate_text_new(models, models_metadata, generated_at):
+    """Recently released builds, served as /new."""
+    recent = recent_builds(models, models_metadata, parse_generated_at(generated_at))
+    excluded = ', '.join(api_stage_name(s) for s in sorted(RECENT_EXCLUDED_STAGES))
+    scope = f'every stage except {excluded}' if excluded else 'every stage'
+    lines = text_title(f'Recently released ({len(recent)})', f'{SITE_URL}/{NEW_DIR}')
+    lines += [f'Builds of the last {RECENT_DAYS} days, {scope}, newest first.', text_checked(generated_at), '']
+    if not recent:
+        lines.append(f'No firmware build was released in the last {RECENT_DAYS} days.')
+    else:
+        rows = [[b['code'].lower(), b['name'], api_stage_name(b['stage']), text_version(b['entry']),
+                 (b['entry'].get('release_time') or '')[:10] or '-', age_text(b['days'])] for b in recent]
+        lines.append(text_table(rows, ['MODEL', 'NAME', 'STAGE', 'VERSION', 'RELEASED', 'AGE']))
+        notes = text_notes(any(b['stage'].startswith('BETA_OPEN') for b in recent),
+                           any(not b['entry'].get('_link_ok', True) for b in recent))
+        if notes:
+            lines += [''] + notes
+    steps = [['Open a build:', f'curl {SITE_URL}/<model>/<stage>']]
+    example = next((b for b in recent if device_page_url(b['code'])), None)
+    if example:
+        steps.append(['', f"e.g. curl {SITE_URL}/{example['code'].lower()}/{api_stage_name(example['stage'])}"])
+    steps += [['Atom feed:', f'{feed_url(absolute=True)}  (per device: /<model>/{FEED_FILE})'],
+              ['Back:', f'curl {SITE_URL}/']]
+    lines += ['', text_table(steps), '']
+    return '\n'.join(lines)
+
 def redirect_stub_html(target, label):
     """Tiny HTML page for directories that only exist for their index.txt:
     browsers get sent to the real page instead of a 404."""
@@ -216,10 +269,10 @@ def generate_text_pages(models, models_metadata, generated_at):
         with open(os.path.join(slug, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(redirect_stub_html(f'../#{m_type.lower()}', TYPE_NAMES.get(m_type, m_type)))
 
-    # /new (recently released) - placeholder until the text/feeds agent fills it
+    # /new: recently released builds; browsers go to the "Recently released" section of the overview
     os.makedirs(NEW_DIR, exist_ok=True)
     with open(os.path.join(NEW_DIR, 'index.txt'), 'w', encoding='utf-8') as f:
-        f.write(f'Recently released\n\nSee {SITE_URL}/ in a browser.\n')
+        f.write(generate_text_new(models, models_metadata, generated_at))
     with open(os.path.join(NEW_DIR, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(redirect_stub_html('../#recent', 'Recently released'))
 
