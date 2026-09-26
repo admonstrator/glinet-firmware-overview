@@ -182,7 +182,7 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 6px; 
   tbody td::before { content: attr(data-stage); display: block; font-size: 12px; color: var(--muted); }
   td.empty { display: none; }
   tbody tr:hover > * { background: none; }
-  footer .cols { grid-template-columns: 1fr; }
+  footer .cols { grid-template-columns: minmax(0, 1fr); }
   .btn { margin-left: 0; }
 }
 """
