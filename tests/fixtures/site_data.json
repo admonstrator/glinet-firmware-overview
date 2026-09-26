@@ -1,0 +1,1997 @@
+{
+ "be10000": {
+  "CLEAN": {
+   "model": "be10000",
+   "stage": "CLEAN",
+   "version": "4.8.6",
+   "release_time": "2026-09-16 14:54:18",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be10000/clean/be10000-4.8.6_release1-gpl-0915-1789475128.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.6\n\nOverview\n\nThis release provides a clean OpenWrt firmware image.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "be10000",
+   "stage": "RELEASE",
+   "version": "4.8.6",
+   "release_time": "2026-09-01 14:38:59",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be10000/release/be10000-4.8.6_release1-1001-0723-1784782120.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.6\n\nOverview\n\nThis version fixes some issues to improve the user experience.\n\nBug Fixes\n\nFixed the MIC certification issue.\n\nFixed the issue where the BE200 wireless adapter could not connect after the upstream network encryption mode was changed from WPA3 to WPA2.\n\nFixed the PN code issue.\n\nFixed the scan dumpall interface issue and synchronized the corresponding driver patch.\n\nFixed the issue with the Repeater blacklist rules and added a timeout mechanism for clearing blacklist entries.\n\nFixed the issue where the Repeater would not select the optimal target BSS during reconnection after going offline, even when the BSS was not blacklisted.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "be3600": {
+  "BETA": {
+   "model": "be3600",
+   "stage": "BETA",
+   "version": "4.10.0",
+   "release_time": "2026-08-27 14:52:29",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be3600/testing/be3600-4.10.0_beta2-1117-0826-1787751257.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nOverview\n\nThis release introduces Mesh, GL.iNet Account, and native VLAN support. It also improves GoodCloud account management and VPN cascading.\n\nNew Features\n\nMesh: Adds EasyMesh-compliant networking using local Mesh Nodes.\n\nGL.iNet Account: Introduces a centralized profile page for viewing and managing GL.iNet account services.\n\nVLAN: Adds IEEE 802.1Q native VLAN support to improve network segmentation and isolation.\n\nOptimizations & Enhancements\n\nGoodCloud: Streamlines the account binding process and adds an option to clear cloud account data during a factory reset.\n\nVPN: Adds IP address and DNS conflict detection for cascaded VPN configurations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "be3600",
+   "stage": "RELEASE",
+   "version": "4.10.1",
+   "release_time": "2026-09-20 18:00:48",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be3600/release/be3600-4.10.1_release1-1129-0918-1789738103.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.1\n\nOverview\n\nThis release introduces Mesh, GL.iNet Account, and native VLAN support. It also improves GoodCloud account management and VPN cascading.\n\nNew Features\n\nMesh: Adds EasyMesh-compliant networking using local Mesh Nodes.\n\nGL.iNet Account: Introduces a centralized profile page for viewing and managing GL.iNet account services.\n\nVLAN: Adds IEEE 802.1Q native VLAN support to improve network segmentation and isolation.\n\nOptimizations & Enhancements\n\nGoodCloud: Streamlines the account binding process and adds an option to clear cloud account data during a factory reset.\n\nVPN: Adds IP address and DNS conflict detection for cascaded VPN configurations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "SNAPSHOT": {
+   "model": "be3600",
+   "stage": "SNAPSHOT",
+   "version": "4.9.1",
+   "release_time": "2026-09-24 04:56:16",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be3600/snapshot/be3600-4.9.1-1094-0924-1790196885.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis snapshot firmware is built automatically each day. Use it with caution.\n\nNew Features\n\n2026-09-22: Added multilingual tooltips for repeater upload and download link rates.\n\n2026-09-18: Added support for QMB416.\n\n2026-09-15: Optimized MiFi partition mounting.\n\n2026-09-14: Improved model detection for overlay mounting.\n\nBug Fixes\n\n2026-09-23: Fixed client disconnection by using the driver type of each interface.\n\n2026-09-23: Updated XVPN requests to use api.xvpn.io.\n\n2026-09-23: Reduced CJK fallback fonts for external text.\n\n2026-09-21: Fixed the error message shown when NetNAT is disabled.\n\n2026-09-21: Synchronized configuration.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "be6500": {
+  "RELEASE": {
+   "model": "be6500",
+   "stage": "RELEASE",
+   "version": "4.9.0",
+   "release_time": "2026-08-13 14:48:59",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be6500/release/be6500-4.9.0_release2-1084-0811-1786450006.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nParental Controls: Due to a comprehensive feature redesign, existing configurations will not be preserved during this upgrade. Please back up your settings and reconfigure them after the update.\n\nVPN Failover: With the introduction of multi-node selection and intra-tunnel failover, the legacy inter-tunnel failover feature has been removed. Upgrading with configuration retention will enable the Kill Switch by default across all tunnels. Please back up your settings prior to upgrading.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "be9300": {
+  "BETA": {
+   "model": "be9300",
+   "stage": "BETA",
+   "version": "4.10.0",
+   "release_time": "2026-08-27 14:52:39",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be9300/testing/be9300-4.10.0_beta2-1117-0826-1787741898.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nOverview\n\nThis release introduces Mesh, GL.iNet Account, and native VLAN support. It also improves GoodCloud account management and VPN cascading.\n\nNew Features\n\nMesh: Adds EasyMesh-compliant networking using local Mesh Nodes.\n\nGL.iNet Account: Introduces a centralized profile page for viewing and managing GL.iNet account services.\n\nVLAN: Adds IEEE 802.1Q native VLAN support to improve network segmentation and isolation.\n\nOptimizations & Enhancements\n\nGoodCloud: Streamlines the account binding process and adds an option to clear cloud account data during a factory reset.\n\nVPN: Adds IP address and DNS conflict detection for cascaded VPN configurations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "be9300",
+   "stage": "RELEASE",
+   "version": "4.10.1",
+   "release_time": "2026-09-20 18:00:31",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be9300/release/be9300-4.10.1_release1-1129-0918-1789732857.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.1\n\nOverview\n\nThis release introduces Mesh, GL.iNet Account, and native VLAN support. It also improves GoodCloud account management and VPN cascading.\n\nNew Features\n\nMesh: Adds EasyMesh-compliant networking using local Mesh Nodes.\n\nGL.iNet Account: Introduces a centralized profile page for viewing and managing GL.iNet account services.\n\nVLAN: Adds IEEE 802.1Q native VLAN support to improve network segmentation and isolation.\n\nOptimizations & Enhancements\n\nGoodCloud: Streamlines the account binding process and adds an option to clear cloud account data during a factory reset.\n\nVPN: Adds IP address and DNS conflict detection for cascaded VPN configurations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "SNAPSHOT": {
+   "model": "be9300",
+   "stage": "SNAPSHOT",
+   "version": "4.9.1",
+   "release_time": "2026-09-24 05:37:13",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/be9300/snapshot/be9300-4.9.1-1094-0924-1790199346.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis snapshot firmware is built automatically each day. Use it with caution.\n\nNew Features\n\n2026-09-22: Added multilingual tooltips for repeater upload and download link rates.\n\n2026-09-18: Added support for QMB416.\n\n2026-09-15: Optimized MiFi partition mounting.\n\n2026-09-14: Improved model detection for overlay mounting.\n\nBug Fixes\n\n2026-09-23: Fixed client disconnection by using the driver type of each interface.\n\n2026-09-23: Updated XVPN requests to use api.xvpn.io.\n\n2026-09-23: Reduced CJK fallback fonts for external text.\n\n2026-09-21: Fixed the error message shown when NetNAT is disabled.\n\n2026-09-21: Synchronized configuration.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "e5800": {
+  "RELEASE": {
+   "model": "e5800",
+   "stage": "RELEASE",
+   "version": "4.10.0",
+   "release_time": "2026-09-01 10:00:05",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/e5800/release/e5800-4.10.0_release5-1092-0825-1787643675.zip",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nCautions\n\nParental Controls: Due to a comprehensive feature redesign, existing configurations will not be preserved during this upgrade. Please back up your settings and reconfigure them after the update.\n\nVPN Failover: With the introduction of multi-node selection and intra-tunnel failover, the legacy inter-tunnel failover feature has been removed. Upgrading with configuration retention will enable the Kill Switch by default across all tunnels. Please back up your settings before upgrading.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt3000": {
+  "BETA": {
+   "model": "mt3000",
+   "stage": "BETA",
+   "version": "4.11.0",
+   "release_time": "2026-09-05 09:54:40",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt3000/testing/mt3000-4.11.0_beta1-1112-0904-1788511848.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.11.0\n\nOverview\n\nThis release introduces new Mesh, GL.iNet Account, network monitoring, security, and VLAN features, alongside major enhancements to DNS, VPN, SQM, QoS, and traffic statistics.\n\nNew Features\n\nNetwork Quality: Adds GL.iNet Score, latency/jitter/packet loss metrics, real-time rate display, active speed tests, and Bufferbloat grading.\n\nSecurity Scan: Scans Wi-Fi safety, WAN exposure, app security, and firmware status; provides a security score, risk list, and quick fixes.\n\nVLAN: Adds native VLAN support based on IEEE 802.1Q for logical network segmentation, enhancing isolation and resource management efficiency.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "BETA_OPEN24": {
+   "_is_open": true,
+   "_openwrt_base": "24",
+   "model": "mt3000",
+   "stage": "BETA_OPEN24",
+   "version": "4.9.0",
+   "release_time": "2026-05-28 19:45:25",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt3000-open/testing/mt3000-op-4.9.0-op24_beta1-1015-0528-1779955715.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9.0, existing configurations for this feature will not be preserved during the\nupgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN\ntunnels in V4.9.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your\nsettings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "BETA_OPEN25": {
+   "_is_open": true,
+   "_openwrt_base": "25",
+   "model": "mt3000",
+   "stage": "BETA_OPEN25",
+   "version": "4.9.1",
+   "release_time": "2026-07-22 10:23:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt3000-open/testing/mt3000-op-4.9.1-op25_beta3-1035-0721-1784638698.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.1\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt3000",
+   "stage": "RELEASE",
+   "version": "4.9.0",
+   "release_time": "2026-09-04 09:49:07",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt3000/release/mt3000-4.9.0_release5-1094-0902-1788316686.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nParental Controls: Due to a comprehensive feature redesign, existing configurations will not be preserved during this upgrade. Please back up your settings and reconfigure them after the update.\n\nVPN Failover: With the introduction of multi-node selection and intra-tunnel failover, the legacy inter-tunnel failover feature has been removed. Upgrading with configuration retention will enable the Kill Switch by default across all tunnels. Please back up your settings prior to upgrading.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt3600be": {
+  "RELEASE": {
+   "model": "mt3600be",
+   "stage": "RELEASE",
+   "version": "4.9.0",
+   "release_time": "2026-07-07 17:58:20",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt3600be/release/mt3600be-4.9.0_release1-1046-0702-1783003143.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt5000": {
+  "RELEASE": {
+   "model": "mt5000",
+   "stage": "RELEASE",
+   "version": "4.9.0",
+   "release_time": "2026-07-23 09:36:52",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt5000/release/mt5000-4.9.0_release1-1053-0708-1783477013.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt6000": {
+  "BETA": {
+   "model": "mt6000",
+   "stage": "BETA",
+   "version": "4.11.0",
+   "release_time": "2026-09-05 09:53:59",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt6000/testing/mt6000-4.11.0_beta1-1112-0904-1788511909.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.11.0\n\nOverview\n\nThis release introduces new Mesh, GL.iNet Account, network monitoring, security, and VLAN features, alongside major enhancements to DNS, VPN, SQM, QoS, and traffic statistics.\n\nNew Features\n\nNetwork Quality: Adds GL.iNet Score, latency/jitter/packet loss metrics, real-time rate display, active speed tests, and Bufferbloat grading.\n\nSecurity Scan: Scans Wi-Fi safety, WAN exposure, app security, and firmware status; provides a security score, risk list, and quick fixes.\n\nVLAN: Adds native VLAN support based on IEEE 802.1Q for logical network segmentation, enhancing isolation and resource management efficiency.\n\n[...]",
+   "_link_ok": false,
+   "_link_reason": "timeout"
+  },
+  "BETA_OPEN24": {
+   "_is_open": true,
+   "_openwrt_base": "24",
+   "model": "mt6000",
+   "stage": "BETA_OPEN24",
+   "version": "4.9.0",
+   "release_time": "2026-06-01 17:27:14",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt6000-open/testing/mt6000-op-4.9.0-op24_beta2-1015-0601-1780290421.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "BETA_OPEN25": {
+   "_is_open": true,
+   "_openwrt_base": "25",
+   "model": "mt6000",
+   "stage": "BETA_OPEN25",
+   "version": "4.9.1",
+   "release_time": "2026-07-22 10:23:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt6000-open/testing/mt6000-op-4.9.1-op25_beta3-1035-0721-1784638639.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.1\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt6000",
+   "stage": "RELEASE",
+   "version": "4.9.1",
+   "release_time": "2026-08-05 20:33:07",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt6000/release/mt6000-4.9.1_release1-1079-0804-1785826264.bin",
+     "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+   ],
+   "changelog": "V4.9.1\n\nOverview\n\nThis release primarily fixes several known defects to improve user experience.\n\nBug Fixes\n\nFixed an issue where the wireless configuration page still displayed the previous channel after modifying the wireless channel.\n\nFixed an issue where the server listening port shown on the VPN dashboard did not match the actual port when connected to NordVPN-OpenVPN.\n\nFixed an issue where an abnormal VPN URL download caused the server list to parse to 0, instead of reusing the locally cached file.\n\n[...]",
+   "_link_ok": false,
+   "_link_reason": "HTTP 404 Not Found",
+   "_fallback_version": "4.7.9",
+   "_fallback_link": "https://fw.gl-inet.com/firmware/mt6000/release/mt6000-4.7.9-fixture.bin",
+   "_fallback_release_time": "2026-01-15 10:00:00"
+  },
+  "SNAPSHOT": {
+   "model": "mt6000",
+   "stage": "SNAPSHOT",
+   "version": "4.9.1",
+   "release_time": "2026-09-24 00:29:31",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt6000/snapshot/mt6000-4.9.1-1094-0924-1790180910.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis snapshot firmware is built automatically each day. Use it with caution.\n\nNew Features\n\n2026-09-22: Added multilingual tooltips for repeater upload and download link rates.\n\n2026-09-18: Added support for QMB416.\n\n2026-09-15: Optimized MiFi partition mounting.\n\n2026-09-14: Improved model detection for overlay mounting.\n\nBug Fixes\n\n2026-09-23: Fixed client disconnection by using the driver type of each interface.\n\n2026-09-23: Updated XVPN requests to use api.xvpn.io.\n\n2026-09-23: Reduced CJK fallback fonts for external text.\n\n2026-09-21: Fixed the error message shown when NetNAT is disabled.\n\n2026-09-21: Synchronized configuration.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "axt1800": {
+  "BETA": {
+   "model": "axt1800",
+   "stage": "BETA",
+   "version": "4.8.4",
+   "release_time": "2026-04-09 17:27:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/axt1800/testing/axt1800-4.8.4_beta1-974-0403-1775203772.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.4\n\nOverview\n\nThis version mainly fixed some known bugs and security vulnerabilities.\n\nOptimization\n\nOptimized the AstroWarp feature design, allowing users to connect to the router using an access code without binding account or complex configurations. Users can also manage connections and top up plans directly on the router interface.\n\nNew Features\n\nAdded support for the AmneziaWG 2.0 obfuscation protocol.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "axt1800",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2026-04-22 09:14:46",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/axt1800/release/axt1800-4.8.3_release1-815-0413-1776065915.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nOverview\n\nThis version mainly fixed some known bugs and security vulnerabilities.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "SNAPSHOT": {
+   "model": "axt1800",
+   "stage": "SNAPSHOT",
+   "version": "4.9.0",
+   "release_time": "2026-09-24 04:05:47",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/axt1800/snapshot/axt1800-4.9.0-1094-0924-1790193883.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis snapshot firmware is built automatically each day. Use it with caution.\n\nNew Features\n\n2026-09-22: Added multilingual tooltips for repeater upload and download link rates.\n\n2026-09-18: Added support for QMB416.\n\n2026-09-15: Optimized MiFi partition mounting.\n\n2026-09-14: Improved model detection for overlay mounting.\n\nBug Fixes\n\n2026-09-23: Fixed client disconnection by using the driver type of each interface.\n\n2026-09-23: Updated XVPN requests to use api.xvpn.io.\n\n2026-09-23: Reduced CJK fallback fonts for external text.\n\n2026-09-21: Fixed the error message shown when NetNAT is disabled.\n\n2026-09-21: Synchronized configuration.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "sft1200": {
+  "RELEASE": {
+   "model": "sft1200",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2026-07-03 09:09:02",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/sft1200/release4/sft1200-4.8.3_release4-1006-0609-1780999327.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy, allowing traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only when the VPN policy is based on MAC.\n\nAdded the isolation feature between the Guest Network and the Upstream network.\n\nAdded support for HTTPS in RTTY.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "x3000": {
+  "BETA": {
+   "model": "x3000",
+   "stage": "BETA",
+   "version": "4.10.0",
+   "release_time": "2026-09-10 17:13:28",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x3000/testing/x3000-4.10.0_beta2-1114-0910-1789007441.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.10.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.10.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "x3000",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2025-11-13 09:55:54",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x3000/release/x3000-4.8.3_release3-902-1106-1762433696.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy for traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only for MAC-based VPN policies.\n\nAdded the isolation feature between the Guest Network and the Upstream network.\n\nAdded HTTPS support for RTTY.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "SNAPSHOT": {
+   "model": "x3000",
+   "stage": "SNAPSHOT",
+   "version": "4.8.4",
+   "release_time": "2026-05-28 01:20:13",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x3000/snapshot/x3000-4.8.4-1006-0528-1779902361.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis is a snapshot firmware, generated by the automatic compiler on a daily basis, please use it with caution.\n\nNew Features\n\nBug Fixes",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "xe3000": {
+  "BETA": {
+   "model": "xe3000",
+   "stage": "BETA",
+   "version": "4.10.0",
+   "release_time": "2026-09-10 17:13:25",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/xe3000/testing/xe3000-4.10.0_beta2-1114-0910-1789012713.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.10.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.10.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "xe3000",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2025-11-10 10:32:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/xe3000/release/xe3000-4.8.3_release3-902-1106-1762433511.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy for traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only for MAC-based VPN policies.\n\nAdded the isolation feature between the Guest Network and the Upstream network.\n\nAdded HTTPS support for RTTY.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "SNAPSHOT": {
+   "model": "xe3000",
+   "stage": "SNAPSHOT",
+   "version": "4.8.4",
+   "release_time": "2026-05-28 01:38:12",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/xe3000/snapshot/xe3000-4.8.4-1006-0528-1779903438.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Overview\n\nThis is a snapshot firmware, generated by the automatic compiler on a daily basis, please use it with caution.\n\nNew Features\n\nBug Fixes",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ax1800": {
+  "BETA": {
+   "model": "ax1800",
+   "stage": "BETA",
+   "version": "4.8.4",
+   "release_time": "2026-03-26 19:41:16",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ax1800/testing/ax1800-4.8.4_beta2-973-0326-1774522458.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.4\n\nOverview\n\nThis version mainly fixed some known bugs.\n\nOptimization\n\nOptimized the AstroWarp feature design, allowing users to connect to the router using an access code without binding account or complex configurations. Users can also manage connections and top up plans directly on the router interface.\n\nNew Features\n\nAdded support for the AmneziaWG 2.0 obfuscation protocol.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "ax1800",
+   "stage": "LEGACY",
+   "version": "3.214",
+   "release_time": "2025-07-02 14:12:37",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ax1800/release/qsdk-ax1800-3.214-0509.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "Important bugfix\n\nfix ipv6: test-ipv6.com report fail\n\nfix router policy mem leak\n\nfix \"cmnos_thread.c: 3656\" type of wifi crash\n\nNew features\n\nsupports side router setup",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ax1800",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2026-03-19 16:59:53",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ax1800/v4/ax1800-4.8.3_release2-930-1226-1766712814.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nCautions\n\nThe OpenWRT version has been upgraded. Please do NOT keep settings when downgrading to an earlier version. Please backup your settings first.\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy for traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only for MAC-based VPN policies.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt2500": {
+  "BETA": {
+   "model": "mt2500",
+   "stage": "BETA",
+   "version": "4.9.0",
+   "release_time": "2026-07-04 14:30:04",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt2500/testing/mt2500-4.9.0_beta3-1048-0704-1783130560.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.9.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.9.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.9.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt2500",
+   "stage": "RELEASE",
+   "version": "4.7.4",
+   "release_time": "2025-03-28 09:52:27",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt2500/release/openwrt-mt2500-4.7.4-0328-1743128340.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.7.4\n\nOverview\n\nThis version fixes some security vulnerabilities and other bugs.\n\nBug Fixes\n\nFixed the issue where the failed VPN policy subscription URL request would display an unknown error.\n\nFixed the issue where turning off 'Override DNS Settings of All Clients' would not take effect after enabling AdGuard Home or VPN Client.\n\nFixed the issue where DDNS testing failed to display the WAN address of Ethernet 2.\n\nFixed an issue where no error message was displayed when entering an incorrect old password, while changing the administrator password.\n\nFixed the issue where manually adding a WireGuard Client configuration would incorrectly prompt the error message.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "x2000": {
+  "BETA": {
+   "model": "x2000",
+   "stage": "BETA",
+   "version": "4.10.0",
+   "release_time": "2026-09-18 09:26:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x2000/testing/x2000-4.10.0_beta1-1117-0917-1789621933.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.10.0\n\nCautions\n\nDue to a comprehensive redesign of the Parental Control feature in V4.10.0, existing configurations for this feature will not be preserved during the upgrade. You will need to reconfigure your settings after the update. Please back up your settings first.\n\nWith the introduction of multi-select configuration and intra-tunnel failover for VPN tunnels in V4.10.0, the inter-tunnel failover feature has been removed. When upgrading with configuration retention, the Kill Switch will be enabled by default in all tunnels. Please back up your settings first.\n\nOverview\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "x2000",
+   "stage": "RELEASE",
+   "version": "4.7.13",
+   "release_time": "2025-06-20 14:18:42",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x2000/release/openwrt-x2000-4.7.13-0620-1750402021.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.7.13\n\nOverview\n\nThis version includes adjustments to enhance device security.\n\nNew Features\n\nAdded Setup guide function.\n\nAdded eSIM function.\n\nAdded Lock Tower function.\n\nAdded serial port encryption.\n\nAdded Tailscale function.\n\nAdded Control D DNS function.\n\nAdded Module Online Upgrade and Module Local Upgrade functions.\n\nAdded a global SSH toggle; the SSH switch can only be enabled if the administrator password is set to a strong password.\n\nAdded modem ip type configuration option.\n\nOptimization\n\nAdded a user privacy policy statement to the initialization wizard page.\n\nAdded a security warning when WiFi security is set to OPEN.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "a1300": {
+  "BETA": {
+   "model": "a1300",
+   "stage": "BETA",
+   "version": "4.7.2",
+   "release_time": "2024-12-27 17:54:26",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/a1300/testing/openwrt-a1300-4.7.2-1227-1735296046.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.7.2\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for overall user experience.\n\nSupport Models\n\nSlate Plus (GL-A1300), Marble (GL-B3000), Collie (GL-X300B).\n\nNew Features\n\nAdded device initialization wizard, including administrator and WiFi password, networking, VPN and other core function settings.\n\nAdded the Cloud account login function, supporting device binding to the cloud from the firmware web page.\n\nAdded Domain Name List Subscription function, support VPN policy and parental control to subscribe to online domain name or IP list via URL.\n\nAdded support for Control D DNS.\n\nAdded the AP Isolation function.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "a1300",
+   "stage": "RELEASE",
+   "version": "4.5.22",
+   "release_time": "2025-04-08 17:20:43",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/a1300/release/openwrt-a1300-4.5.22-0408-1744104085.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.5.22\n\nOverview\n\nThis version fixed some security vulnerabilities.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "b3000": {
+  "BETA": {
+   "model": "b3000",
+   "stage": "BETA",
+   "version": "4.7.15",
+   "release_time": "2025-08-01 11:52:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b3000/testing/openwrt-b3000-4.7.15-0801-1754021959.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.7.15\n\nOverview\n\nThis version includes adjustments to enhance device security.\n\nNew Features\n\nAdded a global SSH toggle.\n\nOptimization\n\nAdded a user privacy policy statement to the initialization wizard page.\n\nAdded a security warning when WiFi security is set to OPEN.\n\nOptimized the network abnormal traffic protection mechanism, adding flood protection for ICMP and other protocols.\n\nLuCI functionality is no longer pre-installed; users can install LuCI with one click on the advanced settings page.\n\nOptimized Nginx log management, adding login and configuration change logs. Logs are automatically synchronized to Flash upon reboot.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "b3000",
+   "stage": "RELEASE",
+   "version": "4.5.22",
+   "release_time": "2025-04-07 17:38:39",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b3000/release/openwrt-b3000-4.5.22-0407-1744021171.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.5.22\n\nOverview\n\nThis version fixed some security vulnerabilities.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ar300m": {
+  "CLEAN": {
+   "model": "ar300m",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/nand/clean/gl-ar300m-3.0-1011_clean.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "ar300m",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:37:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/nand/v1/openwrt-ar300m-3.216-0321-1679391450.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "Security\n\nFixed shell injection vulnerabilities.\n\nNew features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\nFixed B2200 MESH sub-router web error message.\n\nFixed AX1800 USB output is powered off because the manual modem reset.\n\nFixed Wireguard client reconnect failure in some scenarios.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ar300m",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-31 20:23:09",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/nand/release4/openwrt-ar300m-4.3.25-0331-1743423889.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "ar300m",
+   "stage": "TOR",
+   "version": "1.41",
+   "release_time": "2025-07-02 14:12:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/nand/tor/openwrt-ar300m-nand-tor-1.41.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ar300m16": {
+  "BETA": {
+   "model": "ar300m16",
+   "stage": "BETA",
+   "version": "4.3.30",
+   "release_time": "2026-05-29 18:41:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/testing/ar300m16-4.3.30_beta1-463-0529-1780042469.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.30\n\nOverview\n\nThis version mainly fixed some known bugs and security vulnerabilities.\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\n2026-05-29: Update the dnsmasq component to version 2.92, incorporating upstream CVE fixes.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "ar300m16",
+   "stage": "CLEAN",
+   "version": "2.264",
+   "release_time": "2025-07-02 14:12:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/clean/openwrt-ar300m16-clean-2.264.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "ar300m16",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:42:14",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/v1/openwrt-ar300m16-3.216-0321-1679391734.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ar300m16",
+   "stage": "RELEASE",
+   "version": "4.3.27",
+   "release_time": "2025-05-14 11:14:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/release4/openwrt-ar300m16-4.3.27-0514-1747192506.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.27\n\nOverview\n\nThis version mainly fixed some known bugs.\n\nBug Fixes\n\nFixed the issue where the transmit power was abnormal in certain situations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "ar300m16",
+   "stage": "TOR",
+   "version": "3.105",
+   "release_time": "2025-07-02 14:12:35",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar300m/tor/openwrt-ar300m16-tor-3.105.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ar750": {
+  "CLEAN": {
+   "model": "ar750",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:34",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750/clean/gl-ar750-3.0-1011_clean.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "ar750",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:32:54",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750/v1/openwrt-ar750-3.216-0321-1679391174.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (AR150,MIFI,AR300M,USB150,N300,AR750,AR750S,X750,E750,XE300,MT1300,MT300N-V2,MV1000)\n\nBased on QSDK11 (B1300,S1300,AP1300,B2200,AX1800)\n\nBased on Siflower SDK (SF1200,SFT1200)\n\nSecurity\n\nFixed shell injection vulnerabilities.\n\nNew features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ar750",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-31 20:48:49",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750/release4/openwrt-ar750-4.3.25-0331-1743425412.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "ar750",
+   "stage": "TOR",
+   "version": "3.105",
+   "release_time": "2025-07-02 14:12:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750/tor/openwrt-ar750-tor-3.105.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "New features\n\nSupported traffic statistics in bridge mode\n\nSupported OpenVPN bridge\n\nSupported NextDNS personal ID\n\nFile sharing supported closing LAN sharing and supports shared folder selection\n\nOpenVPN server supported CHACHA20-POLY1305 encryption\n\nOpenVPN server supported Authentication option setting\n\nWireguard server supported local network access switch\n\nThe modem supported QCM protocol, SMS forwarding, adding Auth, Proto, TTL, and other configuration options (MIFI, X750, E750, X1200)\n\nSupported MCU setting (E750)\n\nSupported AdGuardHome (S1300)\n\nSoftware upgrade\n\nOpenssl upgraded to 1.1.1d\n\nOpenvpn upgraded to 2.5.0\n\nOptimization\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ar750s": {
+  "BETA": {
+   "model": "ar750s",
+   "stage": "BETA",
+   "version": "4.7.2",
+   "release_time": "2025-03-31 20:13:11",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750s/testing/openwrt-ar750s-4.7.2-0331-1743425421.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.7.2\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for overall user experience.\n\nNew Features\n\nAdded device initialization wizard, including administrator and WiFi password, networking, VPN and other core function settings.\n\nAdded the Cloud account login function, supporting device binding to the cloud from the firmware web page.\n\nAdded Domain Name List Subscription function, support VPN policy and parental control to subscribe to online domain name or IP list via URL.\n\nAdded the AP Isolation function.\n\nAdded the Luci Access Restriction function.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "ar750s",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:34",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750s/clean/gl-ar750s-3.0-1011_clean.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "ar750s",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:40:41",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750s/release/openwrt-ar750s-3.216-0321-1679391641.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (AR150,MIFI,AR300M,USB150,N300,AR750,AR750S,X750,E750,XE300,MT1300,MT300N-V2,MV1000)\n\nBased on QSDK11 (B1300,S1300,AP1300,B2200,AX1800)\n\nBased on Siflower SDK (SF1200,SFT1200)\n\nSecurity\n\nFixed shell injection vulnerabilities.\n\nNew features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ar750s",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-04-03 12:30:46",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar750s/release4/openwrt-ar750s-4.3.25-0403-1743654681.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "b1300": {
+  "CLEAN": {
+   "model": "b1300",
+   "stage": "CLEAN",
+   "version": "3.022",
+   "release_time": "2025-07-02 14:12:29",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b1300/clean/qsdk-b1300-clean-3.022.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "New features\n\nNew UI 3.0, simpler and smoother operation.\n\nWireGuard Client/Server pre-installed, which is compatible with third party azirevpn/mullvad service provider.\n\nSupport DNS over TLS from Cloudflare.\n\nSupport GL new Cloud.\n\nSupport GL new DDNS.\n\nAdded client management feature which includes QoS, traffic statistics and offline clients.\n\nAdded firewall settings page which includes port forward, open port and DMZ.\n\nAdded Hide SSID option and connecting to hidden SSID function.\n\nAdded guest Wi-Fi network.\n\nAdded keep installed packages when upgrade.\n\nAdded static IP address binding and custom DHCP range.\n\nAdded Captive Portal.\n\nSupport multiple languages.\n\nFixed\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "b1300",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-04-26 02:02:50",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b1300/v1/qsdk-b1300-3.216-0426-1682445770.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\nFixed B2200 MESH sub-router web error message.\n\nFixed AX1800 USB output is powered off because the manual modem reset.\n\nFixed Wireguard client reconnect failure in some scenarios.\n\nFixed Error occurs when the wireguare client name contains spaces.\n\nSystem\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "b1300",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-31 20:47:19",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b1300/release4/openwrt-b1300-4.3.25-0331-1743425295.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "e750": {
+  "BETA": {
+   "model": "e750",
+   "stage": "BETA",
+   "version": "4.8.5",
+   "release_time": "2026-05-25 10:37:58",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/e750/testing/e750-4.8.5_beta1-1005-0521-1779357101.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.5\n\nOverview\n\nThis version mainly fixed some known bugs.\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\nFixed modem dial-up issues.\n\nFixed abnormal log printing issues related to the modem.\n\nFixed the issue where OLED did not display VPN connection status.\n\nFixed the issue where Cell Info was not fully displayed when EM060K module used multi-band carrier aggregation for networking.\n\nFixed SMS display issues.\n\n2026-05-21: Update the dnsmasq component to version 2.92, incorporating upstream CVE fixes.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "e750",
+   "stage": "LEGACY",
+   "version": "3.217",
+   "release_time": "2023-05-08 10:41:43",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/e750/release/openwrt-e750-3.217-0508-1683513703.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (MIFI,X750,E750,XE300,XE300)\n\nBased on QSDK11 (AP1300)\n\nImportant bugfix\n\nFix account error for SMTP settings.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "e750",
+   "stage": "RELEASE",
+   "version": "4.3.26",
+   "release_time": "2025-04-08 10:14:29",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/e750/release4/openwrt-e750-4.0-release10326-0408-1744078505.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.26\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt1300": {
+  "BETA": {
+   "model": "mt1300",
+   "stage": "BETA",
+   "version": "4.3.26",
+   "release_time": "2026-05-29 18:22:51",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt1300/testing/mt1300-4.3.26_beta1-455-0528-1779943852.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.26\n\nOverview\n\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\n2026-05-28: Update the dnsmasq component to version 2.92, incorporating upstream CVE fixes.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "LEGACY": {
+   "model": "mt1300",
+   "stage": "LEGACY",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:35:39",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt1300/release/openwrt-mt1300-3.216-0321-1679391339.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (AR150,MIFI,AR300M,USB150,N300,AR750,AR750S,X750,E750,XE300,MT1300,MT300N-V2,MV1000)\n\nBased on QSDK11 (B1300,S1300,AP1300,B2200,AX1800)\n\nBased on Siflower SDK (SF1200,SFT1200)\n\nSecurity\n\nFixed shell injection vulnerabilities.\n\nNew features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt1300",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-31 22:06:45",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt1300/release4/openwrt-mt1300-4.3.25-0331-1743430041.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt300n-v2": {
+  "BETA": {
+   "model": "mt300n-v2",
+   "stage": "BETA",
+   "version": "4.3.29",
+   "release_time": "2026-05-29 11:03:16",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n-v2/testing/mt300n-v2-4.3.29_beta1-463-0528-1779974146.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.29\n\nOverview\n\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\n2026-05-28: Update the dnsmasq component to version 2.92, incorporating upstream CVE fixes.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "mt300n-v2",
+   "stage": "CLEAN",
+   "version": "2.264",
+   "release_time": "2025-07-02 14:12:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n-v2/clean/lede-mt300n-v2-clean-2.264.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt300n-v2",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-18 19:53:12",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n-v2/release4/openwrt-mt300n-v2-4.3.25-0318-1742298825.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "mt300n-v2",
+   "stage": "TOR",
+   "version": "3.203",
+   "release_time": "2025-07-02 14:12:34",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n-v2/tor/openwrt-mt300n-v2-tor-3.203.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "OpenWrt Distribution\n\nBased on OpenWrt 19.07.7 (AR150, MIFI, AR300M, USB150, N300, AR750, AR750S, X750, E750, X1200,XE300, MT300N-V2, MT1300, MV1000)\n\nBased on QSDK11 (B1300, S1300, AP1300)\n\nSecurity fix\n\nmac80211: backport upstream fixes for FragAttacks(CVE-2020-24586, CVE-2020-24587, CVE-2020-24588, CVE-2020-26139, CVE-2020-26140, CVE-2020-26141, CVE-2020-26142, CVE-2020-26143, CVE-2020-26144, CVE-2020-26145, CVE-2020-26146, CVE-2020-26147)\n\nImportant bug fix\n\nFixed a BUG where the OpenVPN connection status was displayed incorrectly on the E750 LCD\n\nFixed XE300 modem manual settings always being overwritten when reboot\n\nFixed DNS leakage when using OpenVPN and Wireguard",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "x300b": {
+  "BETA": {
+   "model": "x300b",
+   "stage": "BETA",
+   "version": "4.5.23",
+   "release_time": "2026-06-11 14:16:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x300b/testing/x300b-4.5.23_beta1-391-0611-1781144030.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.5.23\n\nOverview\n\nThis is a beta firmware with only basic testing completed.  Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\n2026-06-11: Backported the known vulnerabilities (CVEs) from dnsmasq version 2.92.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "x300b",
+   "stage": "RELEASE",
+   "version": "4.5.22",
+   "release_time": "2025-04-10 14:43:10",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x300b/release4/openwrt-x300b-4.5.22-0410-1744267427.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.5.22\n\nOverview\n\nThis version fixed some security vulnerabilities.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "x300b",
+   "stage": "TOR",
+   "version": "3.203",
+   "release_time": "2025-07-02 14:12:49",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x300b/tor/openwrt-x300b-tor-3.203.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "OpenWrt Distribution\n\nBased on OpenWrt 19.07.7 (AR150, MIFI, AR300M, USB150, N300, AR750, AR750S, X750, E750, X1200,XE300, MT300N-V2, MT1300, MV1000)\n\nBased on QSDK11 (B1300, S1300, AP1300)\n\nSecurity fix\n\nmac80211: backport upstream fixes for FragAttacks(CVE-2020-24586, CVE-2020-24587, CVE-2020-24588, CVE-2020-26139, CVE-2020-26140, CVE-2020-26141, CVE-2020-26142, CVE-2020-26143, CVE-2020-26144, CVE-2020-26145, CVE-2020-26146, CVE-2020-26147)\n\nImportant bug fix\n\nFixed a BUG where the OpenVPN connection status was displayed incorrectly on the E750 LCD\n\nFixed XE300 modem manual settings always being overwritten when reboot\n\nFixed DNS leakage when using OpenVPN and Wireguard",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "x750": {
+  "BETA": {
+   "model": "x750",
+   "stage": "BETA",
+   "version": "4.3.29",
+   "release_time": "2026-05-29 20:12:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x750/testing/x750-4.3.29_beta1-453-0528-1779974212.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.29\n\nOverview\n\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nBug Fixes\n\n2026-05-28: Update the dnsmasq component to version 2.92, incorporating upstream CVE fixes.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "x750",
+   "stage": "RELEASE",
+   "version": "4.3.25",
+   "release_time": "2025-03-31 21:01:57",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x750/release4/openwrt-x750-4.0-release10325-0331-1743426151.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.25\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSynchronize Updated Models\n\nOpal (GL-SFT1200), Beryl (GL-MT1300), Slate (GL-AR750S), Creta (GL-AR750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Mudi (GL-E750), Spitz (GL-X750), Puli (GL-XE300), Convexa-B (GL-B1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "x750",
+   "stage": "TOR",
+   "version": "3.203",
+   "release_time": "2025-07-02 14:12:52",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x750/tor/openwrt-x750-tor-3.203.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Security fix\n\nmac80211: backport upstream fixes for FragAttacks(CVE-2020-24586, CVE-2020-24587, CVE-2020-24588, CVE-2020-26139, CVE-2020-26140, CVE-2020-26141, CVE-2020-26142, CVE-2020-26143, CVE-2020-26144, CVE-2020-26145, CVE-2020-26146, CVE-2020-26147)\n\nImportant bug fix\n\nFixed a BUG where the OpenVPN connection status was displayed incorrectly on the E750 LCD\n\nFixed XE300 modem manual settings always being overwritten when reboot\n\nFixed DNS leakage when using OpenVPN and Wireguard\n\nOpenWrt Distribution\n\nBased on OpenWrt 19.07.7 (AR150, MIFI, AR300M, USB150, N300, AR750, AR750S, X750, E750, X1200,XE300, MT300N-V2, MT1300, MV1000)\n\nBased on QSDK11 (B1300, S1300, AP1300)",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "xe300": {
+  "BETA": {
+   "model": "xe300",
+   "stage": "BETA",
+   "version": "4.8.4",
+   "release_time": "2026-06-03 09:56:23",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/xe300/testing/xe300-4.8.4_beta1-1006-0602-1780375747.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.4\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\nThis is a beta firmware, which has only undergone basic testing. Please use with caution and contact support@gl-inet.com if you encounter any problems.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy for traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only for MAC-based VPN policies.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "xe300",
+   "stage": "RELEASE",
+   "version": "4.3.27",
+   "release_time": "2025-05-14 20:17:56",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/xe300/release4/openwrt-xe300-4.3.27-0514-1747225111.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.27\n\nOverview\n\nThis version mainly fixed some known bugs.\n\nBug Fixes\n\nFixed the issue where the transmit power was abnormal in certain situations.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ap1300": {
+  "RELEASE": {
+   "model": "ap1300",
+   "stage": "RELEASE",
+   "version": "4.3.18",
+   "release_time": "2024-08-29 15:30:03",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ap1300/release4/openwrt-ap1300-4.0-release20318-0829-1724916760.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.18\n\nOverview\n\nThis version fixes some security vulnerabilities.\n\nSupported models\n\nSlate (GL-AR750S), Creta (GL-AR750), Mudi (GL-E750), Shadow (GL-AR300M), Shadow (GL-AR300M16), Mango (GL-MT300N-V2), Puli (GL-XE300), Convexa-B (GL-B1300), Cirrus (GL-AP1300).",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "ar150": {
+  "CLEAN": {
+   "model": "ar150",
+   "stage": "CLEAN",
+   "version": "2.264",
+   "release_time": "2025-07-02 14:12:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar150/clean/openwrt-ar150-clean-2.264.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "ar150",
+   "stage": "RELEASE",
+   "version": "3.216",
+   "release_time": "2023-03-21 17:33:57",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar150/v1/openwrt-ar150-3.216-0321-1679391237.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (AR150,MIFI,AR300M,USB150,N300,AR750,AR750S,X750,E750,XE300,MT1300,MT300N-V2,MV1000)\n\nBased on QSDK11 (B1300,S1300,AP1300,B2200,AX1800)\n\nBased on Siflower SDK (SF1200,SFT1200)\n\nSecurity\n\nFixed shell injection vulnerabilities.\n\nNew features\n\nSupport upgrade to sdk4.x.\n\nImportant bugfix\n\nFixed SF1200/SFT1200 VPN data leaks.\n\nFixed MT300N-V2 switch does not reset after the network is restarted.\n\nFixed X750 wireless initialization exception.\n\nFixed B2200 WiFi mac error.\n\nFixed B2200 MESH clients display error.\n\nFixed B2200 MESH link instability.\n\nFixed B2200 MESH status LED display error.\n\nFixed B2200 MESH network failure after the upgrade.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "ar150",
+   "stage": "TOR",
+   "version": "1.2",
+   "release_time": "2025-07-02 14:12:35",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ar150/tor/openwrt-ar150-tor-1.2.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "b2200": {
+  "RELEASE": {
+   "model": "b2200",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-09 16:36:41",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/b2200/v4/qsdk-b2200-3.218-0709-1720514201.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nVelica (GL-B2200), Brume (GL-MV1000), Brume-W (GL-MV1000W), Microuter (GL-USB150), microuter-N300, GL-SF1200.\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mifi": {
+  "CLEAN": {
+   "model": "mifi",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:38",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mifi/clean/gl-mifi-3.0-1011_clean.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mifi",
+   "stage": "RELEASE",
+   "version": "3.217",
+   "release_time": "2023-05-08 10:48:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mifi/v1/openwrt-mifi-3.217-0508-1683514110.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "System\n\nBased on openwrt 19.07.8  (MIFI,X750,E750,XE300,XE300)\n\nBased on QSDK11 (AP1300)\n\nImportant bugfix\n\nFix account error for SMTP settings.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "mifi",
+   "stage": "TOR",
+   "version": "3.105",
+   "release_time": "2025-07-02 14:12:39",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mifi/tor/openwrt-mifi-tor-3.105.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "Optimization\n\nOptimized real-time traffic statistics and reduce CPU load\n\nOptimized MQTT\n\nOptimized 4G to WiFi speed (MIFI,X750,E750)\n\nOptimized the number of X1200 5G client connections\n\nLanguage\n\nSupported Russian\n\nFixed the problem of incomplete and inaccurate translation of some languages\n\nUI\n\nAdded VPN status indicator icon to the navigation page\n\nAdded quick navigation to Wireguard client commercial configuration\n\nRemoved the import method with JSON format in Wireguard client\n\nImportant bug fix\n\nFixed the problem that AdGuardHome cannot be upgraded\n\nFixed MV1000 memory leak problem\n\nFixed tethering problem with iOS14 system\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt300a": {
+  "BETA": {
+   "model": "mt300a",
+   "stage": "BETA",
+   "version": "3.100",
+   "release_time": "2025-07-02 14:12:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300a/testing/openwrt-mt300a-3.100-1217.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "mt300a",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:37",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300a/clean/gl-mt300a-3.0-1011_clean.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt300a",
+   "stage": "RELEASE",
+   "version": "2.265",
+   "release_time": "2025-07-02 14:12:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300a/v1/openwrt-mt300a-2.265.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "mt300a",
+   "stage": "TOR",
+   "version": "1.0",
+   "release_time": "2025-07-02 14:12:31",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300a/tor/openwrt-gl-mt300a-tor-luci-1.0.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mt300n": {
+  "BETA": {
+   "model": "mt300n",
+   "stage": "BETA",
+   "version": "3.100",
+   "release_time": "2025-07-02 14:12:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n/testing/openwrt-mt300n-3.100-1217.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "mt300n",
+   "stage": "CLEAN",
+   "version": "2.264",
+   "release_time": "2025-07-02 14:12:32",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n/clean/openwrt-gl-mt300n-clean-2.264.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "mt300n",
+   "stage": "RELEASE",
+   "version": "2.265",
+   "release_time": "2025-07-02 14:12:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n/v1/openwrt-mt300n-2.265.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "TOR": {
+   "model": "mt300n",
+   "stage": "TOR",
+   "version": "1.0",
+   "release_time": "2025-07-02 14:12:31",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mt300n/tor/openwrt-gl-mt300n-tor-luci-1.0.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "mv1000": {
+  "RELEASE": {
+   "model": "mv1000",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-27 16:31:59",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/mv1000/v4/openwrt-mv1000-emmc-3.218-0727-1722069119.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nVelica (GL-B2200), Brume (GL-MV1000), Brume-W (GL-MV1000W), Microuter (GL-USB150), microuter-N300, GL-SF1200.\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "s1300": {
+  "BETA": {
+   "model": "s1300",
+   "stage": "BETA",
+   "version": "4.3.13",
+   "release_time": "2024-04-13 16:51:49",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s1300/testing/openwrt-s1300-4.3.13-0413-1712998434.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.3.13\n\nOverview\n\nThis version mainly includes optimizations, bug fixes, and security vulnerability resolutions, as shown below.\n\nSupported Models\n\nGL-AR300M,GL-AR300M16,GL-AR750,GL-AR750S-EXT,GL-B1300,GL-MT300N-V2,GL-MT1300,GL-SFT1200 and GL-X750\n\nNew features\n\nAdded support for Korean.\n\nAdded some software packages (kmod-fs-vfat, kmod-fs-ntfs, kmod-fs-ext4, e2fsprogs) to GL-X750.\n\nBug fixes\n\nFixed the issue that routers acting as VPN server and client could not automatically reconnect after disconnecting due to network volatility.\n\nFixed the issue that client devices connected through a Ethernet cable would not automatically reconnect after modifying the LAN IP address.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "s1300",
+   "stage": "CLEAN",
+   "version": "3.023",
+   "release_time": "2025-07-02 14:12:36",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s1300/clean/qsdk-s1300-clean-3.023.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "s1300",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-26 09:44:08",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s1300/v4/qsdk-s1300-3.218-0726-1721958248.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nConvexa-S (GL-S1300), Cirrus (GL-AP1300).\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "sf1200": {
+  "RELEASE": {
+   "model": "sf1200",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-09 17:41:35",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/sf1200/v4/openwrt-sf1200-3.218-0709-1720518095.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nVelica (GL-B2200), Brume (GL-MV1000), Brume-W (GL-MV1000W), Microuter (GL-USB150), microuter-N300, GL-SF1200.\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "usb150": {
+  "CLEAN": {
+   "model": "usb150",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:40",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/usb150/clean/gl-usb150-3.0-1011_clean.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "usb150",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-09 16:55:19",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/usb150/v4/openwrt-usb150-3.218-0709-1720515319.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nVelica (GL-B2200), Brume (GL-MV1000), Brume-W (GL-MV1000W), Microuter (GL-USB150), microuter-N300, GL-SF1200.\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "x1200": {
+  "RELEASE": {
+   "model": "x1200",
+   "stage": "RELEASE",
+   "version": "3.203",
+   "release_time": "2021-07-01 18:09:16",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/x1200/release/openwrt-x1200-3.203-0701-1625134156.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "OpenWrt Distribution\n\nBased on OpenWrt 19.07.7 (AR150, MIFI, AR300M, USB150, N300, AR750, AR750S, X750, E750, X1200,XE300, MT300N-V2, MT1300, MV1000)\n\nBased on QSDK11 (B1300, S1300, AP1300)\n\nSecurity fix\n\nmac80211: backport upstream fixes for FragAttacks(CVE-2020-24586, CVE-2020-24587, CVE-2020-24588, CVE-2020-26139, CVE-2020-26140, CVE-2020-26141, CVE-2020-26142, CVE-2020-26143, CVE-2020-26144, CVE-2020-26145, CVE-2020-26146, CVE-2020-26147)\n\nImportant bug fix\n\nFixed a BUG where the OpenVPN connection status was displayed incorrectly on the E750 LCD\n\nFixed XE300 modem manual settings always being overwritten when reboot\n\nFixed DNS leakage when using OpenVPN and Wireguard",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "n300": {
+  "RELEASE": {
+   "model": "n300",
+   "stage": "RELEASE",
+   "version": "3.218",
+   "release_time": "2024-07-30 14:57:55",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/n300/v4/openwrt-n300-3.218-0730-1722322675.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "V3.218\n\nOverview\n\nThis firmware release provides fixes to various bugs and security vulnerabilities.\n\nSupported Models\n\nVelica (GL-B2200), Brume (GL-MV1000), Brume-W (GL-MV1000W), Microuter (GL-USB150), microuter-N300, GL-SF1200.\n\nBug fixes\n\nFixed an issue that the client device of the router could not get an IP address if the router as a VPN client disconnects and reconnects with an OpenVPN server in S2S-TAP mode.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "vixmini": {
+  "BETA": {
+   "model": "vixmini",
+   "stage": "BETA",
+   "version": "3.027",
+   "release_time": "2025-07-02 14:12:41",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/vixmini/testing/openwrt-vixmini-3.027-0826.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "CLEAN": {
+   "model": "vixmini",
+   "stage": "CLEAN",
+   "version": "3.0",
+   "release_time": "2025-07-02 14:12:40",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/vixmini/clean/vixmini-3.0-1011_clean.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "vixmini",
+   "stage": "RELEASE",
+   "version": "3.003",
+   "release_time": "2025-07-02 14:12:40",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/vixmini/release/openwrt-vixmini-3.003.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "s10": {
+  "RELEASE": {
+   "model": "s10",
+   "stage": "RELEASE",
+   "version": "2.3.1",
+   "release_time": "2025-07-02 14:12:35",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s10/standard/gl-s10-2.3.1.bin",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "s20ble": {
+  "RELEASE": {
+   "model": "s20ble",
+   "stage": "RELEASE",
+   "version": "1.1.0",
+   "release_time": "2025-07-02 14:12:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s20ble/release/s20ble-1.1.0-1008.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V1.1.0\n\nOverview\n\nThis version mainly adds the function of Bluetooth and reporting data, fixes the known network connection problem, provides the option of Bluetooth scanning and filtering repeatedly, and the function of reporting data in CBOR format.\n\nNew features\n\nAdd duplicate filter function.\n\nAdd report CBOR data format.\n\nAdd basic information function of reporting device.\n\nAdd MQTT advanced configuration options\n\n##Bug fixes\n\nFix stop wifi case problem when connecting wifi ap.\n\nFix Trigger button delay problem.\n\nFix led display problem.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "s20otbr": {
+  "BETA": {
+   "model": "s20otbr",
+   "stage": "BETA",
+   "version": "2.0.1",
+   "release_time": "2025-07-02 14:12:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s20otbr/testing/s20otbr-2.0.1-1212.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V2.0.1-B1\n\nOverview\n\nCompared to v2.0.0-R1, this version added Openthread REST API and can access to Home Assistant.",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "s20otbr",
+   "stage": "RELEASE",
+   "version": "2.1.1",
+   "release_time": "2026-06-24 12:15:56",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s20otbr/release/s20otbr-2.1.1-0623.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "s200": {
+  "BETA": {
+   "model": "s200",
+   "stage": "BETA",
+   "version": "4.7.0",
+   "release_time": "2026-07-22 17:27:24",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s200/testing/openwrt-s200-4.7.0-0502-0722-1784709441.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "4.7.0-0502\n\nOverview\n\nThis version mainly fixes a few known bugs.\n\nBug Fixes",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "s200",
+   "stage": "RELEASE",
+   "version": "4.7.0",
+   "release_time": "2024-12-24 18:37:56",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/s200/release/openwrt-s200-4.7.0-0500-1224-1735037872.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "v4.7.0-0500\n\nWARNING\n\nDue to some known issues, some users may not be able to upgrade online from v4.1.5-0400. Please visit the Firmware Centre to download the latest firmware for a local upgrade.\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for overall user experience.\n\nNew features\n\nAdded Ethernet Pre-Set Up.\n\nAdded Thread Devices page and enhanced network diagonstic features.\n\nAdded a button to switch from the Router role to the Leader role.\n\nAdded Backbone Interface configuration wizard.\n\nAdded random Thread credentials.\n\nImprovements\n\nUpdated RouterSDK to v4.7, supporting GoodCloud 3.0 and newer versions.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM1": {
+  "BETA": {
+   "model": "RM1",
+   "stage": "BETA",
+   "version": "1.10.0",
+   "release_time": "2026-07-22 10:32:30",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm1/testing/glkvm-RM1-1.10.0-0710-1783648193.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nVideo & Connectivity:\n\nAdded WebRTC (Native) mode, implemented based on the Google WebRTC Library. It supports advanced capabilities such as automatic bitrate adjustment and FEC, improving the real-time streaming experience.\n\nAdded HID transmission support for WebRTC (FEC) mode. When controlling keyboard and mouse through WebRTC / WebRTC FEC mode, HID data is transmitted through the WebRTC channel, significantly reducing keyboard and mouse latency in network environments where hole punching succeeds.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "RM1",
+   "stage": "RELEASE",
+   "version": "1.10.1",
+   "release_time": "2026-09-17 17:19:06",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm1/release/glkvm-RM1-1.10.1-0916-1789548463.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nAdded WebRTC (Native) mode, powered by the Google WebRTC Library for improved streaming performance.\n\nAdded Data Dashboard to monitor latency, jitter, and other real-time metrics.\n\nAdded USB Device Manager for centralized management of USB emulation devices.\n\nAdded a Settings Center with expanded customization options, including fullscreen toolbar preferences.\n\nImprovements\n\nImproved device startup speed.\n\nStrengthened password policy (minimum 10 characters with at least two character types)to enhance security\n\nAdded HID support in WebRTC mode for lower keyboard and mouse latency over P2P connections.\n\nAdded a Caps Lock status indicator for the controlled device.\n\nBug Fixes\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM10": {
+  "BETA": {
+   "model": "RM10",
+   "stage": "BETA",
+   "version": "1.10.0",
+   "release_time": "2026-07-22 09:50:00",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm10/testing/glkvm-RM10-1.10.0-0715-1784101556.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nVideo & Connectivity:\n\nAdded WebRTC (Native) mode, implemented based on the Google WebRTC Library. It supports advanced capabilities such as automatic bitrate adjustment and FEC, improving the real-time streaming experience.\n\nAdded HID transmission support for WebRTC (FEC) mode. When controlling keyboard and mouse through WebRTC / WebRTC FEC mode, HID data is transmitted through the WebRTC channel, significantly reducing keyboard and mouse latency in network environments where hole punching succeeds.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "RM10",
+   "stage": "RELEASE",
+   "version": "1.10.0",
+   "release_time": "2026-08-24 10:23:56",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm10/release/glkvm-RM10-1.10.0-0821-1787312598.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nAdded WebRTC (Native) mode, powered by the Google WebRTC Library for improved streaming performance.\n\nAdded Data Dashboard to monitor latency, jitter, and other real-time metrics.\n\nAdded USB Device Manager for centralized management of USB emulation devices.\n\nAdded a Settings Center with expanded customization options, including fullscreen toolbar preferences.\n\nImprovements\n\nImproved device startup speed.\n\nStrengthened password policy (minimum 10 characters with at least two character types)to enhance security\n\nAdded HID support in WebRTC mode for lower keyboard and mouse latency over P2P connections.\n\nAdded a Caps Lock status indicator for the controlled device.\n\nBug Fixes\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM10RC": {
+  "RELEASE": {
+   "model": "RM10RC",
+   "stage": "RELEASE",
+   "version": "1.9.1",
+   "release_time": "2026-06-02 10:05:38",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm10rc/release/glkvm-RM10RC-1.9.1-0527-1779867247.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nLatency mode: Users can customize the device's latency mode.\n\nLanguage support: Added Japanese language support.\n\nFunction expansion: Added support for the third-party feature Netbird.\n\nDisplay settings: Allow customizing the screen display via the web console.\n\nEnterprise network support: Added compatibility with enterprise encrypted Wi-Fi.\n\nMouse operation: Added an option to swap left and right mouse buttons.\n\nBeta program: Users can now join the beta program to test upcoming firmware features.\n\nOCR function: Added automatic text recognition, limited to certain languages.\n\nScreen function: Added quick configuration support for applications such as Tailscale and Netbird.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM1PE": {
+  "RELEASE": {
+   "model": "RM1PE",
+   "stage": "RELEASE",
+   "version": "1.10.1",
+   "release_time": "2026-09-15 18:38:47",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm1pe/release/glkvm-RM1PE-1.10.1-0914-1789367934.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nAdded two-way video support.\n\nAdded WebRTC (Native) mode, powered by the Google WebRTC Library for improved streaming performance.\n\nAdded Data Dashboard to monitor latency, jitter, and other real-time metrics.\n\nAdded USB Device Manager for centralized management of USB emulation devices.\n\nAdded a Settings Center with expanded customization options, including fullscreen toolbar preferences.\n\nImprovements\n\nImproved device startup speed.\n\nStrengthened password policy (minimum 10 characters with at least two character types)to enhance security\n\nAdded HID support in WebRTC mode for lower keyboard and mouse latency over P2P connections.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM1V2": {
+  "RELEASE": {
+   "model": "RM1V2",
+   "stage": "RELEASE",
+   "version": "1.9.1",
+   "release_time": "2026-05-27 18:32:33",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm1v2/release/glkvm-RM1V2-1.9.1-0525-1779676131.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nDelay mode configuration: Users can customize the device's delay mode.\n\nLanguage support: Added Japanese language support.\n\nFunction expansion: Added support for the third-party feature Netbird.\n\nMouse operation optimization: Added an option to swap left and right mouse buttons.\n\nBeta Program: Users can now join the beta program to test upcoming firmware features.\n\nOCR function: Added automatic text recognition, limited to certain languages.\n\nBug Fixes\n\nZeroTier connection: Fixed the issue where the device could not be accessed in certain cases when ZeroTier was enabled.\n\nOptimizations\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RM4PE": {
+  "RELEASE": {
+   "model": "RM4PE",
+   "stage": "RELEASE",
+   "version": "1.10.1",
+   "release_time": "2026-09-07 11:03:10",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rm4pe/release/glkvm-RM4PE-1.10.1-0901-1788224401.img",
+     "md5": ""
+    }
+   ],
+   "changelog": "New Features\n\nAdded two-way video support.\n\nAdded WebRTC (Native) mode, powered by the Google WebRTC Library for improved streaming performance.\n\nAdded Data Dashboard to monitor latency, jitter, and other real-time metrics.\n\nAdded USB Device Manager for centralized management of USB emulation devices.\n\nAdded a Settings Center with expanded customization options, including fullscreen toolbar preferences.\n\nImprovements\n\nImproved device startup speed.\n\nStrengthened password policy (minimum 10 characters with at least two character types)to enhance security\n\nAdded HID support in WebRTC mode for lower keyboard and mouse latency over P2P connections.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "RMQ1": {
+  "BETA": {
+   "model": "RMQ1",
+   "stage": "BETA",
+   "version": "1.8.4",
+   "release_time": "2026-09-04 14:34:54",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rmq1/testing/glkvm-RMQ1-nand-1.8.4-0903-1788408333.swu",
+     "md5": ""
+    }
+   ],
+   "changelog": "Improvements\n\nOptimize WebUI onboarding guidance\n\nEnhance firmware upgrade security\n\nImprove Wi-Fi connection stability",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  },
+  "RELEASE": {
+   "model": "RMQ1",
+   "stage": "RELEASE",
+   "version": "1.8.5",
+   "release_time": "2026-09-18 12:13:58",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/kvm/rmq1/release/glkvm-RMQ1-nand-1.8.5-0914-1789347320.swu",
+     "md5": ""
+    }
+   ],
+   "changelog": "Improvements\n\nOptimize WebUI onboarding guidance\n\nEnhance firmware upgrade security\n\nImprove Wi-Fi connection stability\n\nBug Fixes\n\nFix failure to connect to Wi-Fi networks with SSID starting with DIRECT-\n\nFix NTP time synchronization issue",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ },
+ "zz-empty": {},
+ "api": {
+  "RELEASE": {
+   "model": "api",
+   "stage": "RELEASE",
+   "version": "4.8.3",
+   "release_time": "2026-03-19 16:59:53",
+   "download": [
+    {
+     "link": "https://fw.gl-inet.com/firmware/ax1800/v4/ax1800-4.8.3_release2-930-1226-1766712814.tar",
+     "md5": ""
+    }
+   ],
+   "changelog": "V4.8.3\n\nCautions\n\nThe OpenWRT version has been upgraded. Please do NOT keep settings when downgrading to an earlier version. Please backup your settings first.\n\nOverview\n\nThis version introduces several new features and enhancements that improve the interface interaction for the overall user experience.\n\nNew Features\n\nAdded VPN multi-instance to support enabling multiple VPN clients simultaneously.\n\nAdded VPN composite policy for traffic diversion based on multiple criteria, including source interface, source MAC address, and destination domain/IP.\n\nAdded an option to enable or disable VPN internet access on the Clients page, which is effective only for MAC-based VPN policies.\n\n[...]",
+   "_link_ok": true,
+   "_link_reason": "HTTP 200"
+  }
+ }
+}

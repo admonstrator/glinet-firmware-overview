@@ -6,8 +6,11 @@ api/
 !/.claude/
 !/images/
 !/cloudflare/
+!/sitelib/
+!/tests/
 index.html
 index.txt
+feed.xml
 status.html
 models.json
 test_api.py

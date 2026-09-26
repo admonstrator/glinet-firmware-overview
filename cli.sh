@@ -165,6 +165,16 @@ model_list() { # TYPE TITLE [QUERY]
     done
 }
 
+# --- recently released -----------------------------------------------------
+
+recent() { # the /new text page: recently released builds, newest first
+    if fetch new/index.txt >"$TMP/new" 2>/dev/null && [ -s "$TMP/new" ]; then
+        if [ -t 1 ]; then $PAGER "$TMP/new"; else cat "$TMP/new"; fi
+    else
+        printf '  %sCould not load %s/new%s\n' "$Y" "$SITE" "$R"
+    fi
+}
+
 # --- main menu -------------------------------------------------------------
 
 while :; do
@@ -172,12 +182,14 @@ while :; do
     printf '  %s1%s  Routers      %s\n' "$B" "$R" "$(count_type ROUTER)"
     printf '  %s2%s  IoT devices  %s\n' "$B" "$R" "$(count_type IOT)"
     printf '  %s3%s  KVM / Comet  %s\n' "$B" "$R" "$(count_type KVM)"
+    printf '  %s4%s  Recently released\n' "$B" "$R"
     printf '\n  Or type a model code or a search term (e.g. %smt3000%s, %sflint%s).   %sq%s quit\n' "$C" "$R" "$C" "$R" "$B" "$R"
     ask "> "
     case $REPLY in
         1) model_list ROUTER "Routers" ;;
         2) model_list IOT "IoT devices" ;;
         3) model_list KVM "KVM / Comet" ;;
+        4) recent ;;
         q|Q) exit 0 ;;
         "") ;;
         *)  q=$(printf '%s' "$REPLY" | tr 'A-Z' 'a-z')

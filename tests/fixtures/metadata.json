@@ -1,0 +1,222 @@
+{
+ "be10000": {
+  "name": "GL-BE10000 Slate 7 Pro",
+  "type": "ROUTER"
+ },
+ "be3600": {
+  "name": "GL-BE3600 Slate 7",
+  "type": "ROUTER"
+ },
+ "be6500": {
+  "name": "GL-BE6500 Flint 3e",
+  "type": "ROUTER"
+ },
+ "be9300": {
+  "name": "GL-BE9300 Flint 3",
+  "type": "ROUTER"
+ },
+ "e5800": {
+  "name": "GL-E5800 Mudi 7",
+  "type": "ROUTER"
+ },
+ "mt3000": {
+  "name": "GL-MT3000 Beryl AX",
+  "type": "ROUTER"
+ },
+ "mt3600be": {
+  "name": "GL-MT3600BE Beryl 7",
+  "type": "ROUTER"
+ },
+ "mt5000": {
+  "name": "GL-MT5000 Brume 3",
+  "type": "ROUTER"
+ },
+ "mt6000": {
+  "name": "GL-MT6000 Flint 2",
+  "type": "ROUTER"
+ },
+ "axt1800": {
+  "name": "GL-AXT1800 Slate AX",
+  "type": "ROUTER"
+ },
+ "sft1200": {
+  "name": "GL-SFT1200 Opal",
+  "type": "ROUTER"
+ },
+ "x3000": {
+  "name": "GL-X3000 Spitz AX",
+  "type": "ROUTER"
+ },
+ "xe3000": {
+  "name": "GL-XE3000 Puli AX",
+  "type": "ROUTER"
+ },
+ "ax1800": {
+  "name": "GL-AX1800 Flint",
+  "type": "ROUTER"
+ },
+ "mt2500": {
+  "name": "GL-MT2500/GL-MT2500A Brume 2",
+  "type": "ROUTER"
+ },
+ "x2000": {
+  "name": "GL-X2000 Spitz Plus",
+  "type": "ROUTER"
+ },
+ "a1300": {
+  "name": "GL-A1300 Slate Plus",
+  "type": "ROUTER"
+ },
+ "b3000": {
+  "name": "GL-B3000 Marble",
+  "type": "ROUTER"
+ },
+ "ar300m": {
+  "name": "GL-AR300M Shadow",
+  "type": "ROUTER"
+ },
+ "ar300m16": {
+  "name": "GL-AR300M16 Shadow",
+  "type": "ROUTER"
+ },
+ "ar750": {
+  "name": "GL-AR750 Creta",
+  "type": "ROUTER"
+ },
+ "ar750s": {
+  "name": "GL-AR750S-EXT Slate",
+  "type": "ROUTER"
+ },
+ "b1300": {
+  "name": "GL-B1300 Convexa-B",
+  "type": "ROUTER"
+ },
+ "e750": {
+  "name": "GL-E750/GL-E750V2 Mudi",
+  "type": "ROUTER"
+ },
+ "mt1300": {
+  "name": "GL-MT1300 Beryl",
+  "type": "ROUTER"
+ },
+ "mt300n-v2": {
+  "name": "GL-MT300N-V2 Mango",
+  "type": "ROUTER"
+ },
+ "x300b": {
+  "name": "GL-X300B Collie",
+  "type": "ROUTER"
+ },
+ "x750": {
+  "name": "GL-X750 Spitz",
+  "type": "ROUTER"
+ },
+ "xe300": {
+  "name": "GL-XE300 Puli",
+  "type": "ROUTER"
+ },
+ "ap1300": {
+  "name": "GL-AP1300 Cirrus",
+  "type": "ROUTER"
+ },
+ "ar150": {
+  "name": "GL-AR150 White",
+  "type": "ROUTER"
+ },
+ "b2200": {
+  "name": "GL-B2200 Velica",
+  "type": "ROUTER"
+ },
+ "mifi": {
+  "name": "GL-MiFi",
+  "type": "ROUTER"
+ },
+ "mt300a": {
+  "name": "GL-MT300A",
+  "type": "ROUTER"
+ },
+ "mt300n": {
+  "name": "GL-MT300N",
+  "type": "ROUTER"
+ },
+ "mv1000": {
+  "name": "GL-MV1000 Brume",
+  "type": "ROUTER"
+ },
+ "s1300": {
+  "name": "GL-S1300 Convexa-S",
+  "type": "ROUTER"
+ },
+ "sf1200": {
+  "name": "GL-SF1200",
+  "type": "ROUTER"
+ },
+ "usb150": {
+  "name": "GL-USB150 Microuter",
+  "type": "ROUTER"
+ },
+ "x1200": {
+  "name": "GL-X1200 Amarok",
+  "type": "ROUTER"
+ },
+ "n300": {
+  "name": "microuter-N300",
+  "type": "ROUTER"
+ },
+ "vixmini": {
+  "name": "VIXMINI",
+  "type": "ROUTER"
+ },
+ "s10": {
+  "name": "GL-S10",
+  "type": "IOT"
+ },
+ "s20ble": {
+  "name": "GL-S20 (BLE Firmware)",
+  "type": "IOT"
+ },
+ "s20otbr": {
+  "name": "GL-S20 (Thread Firmware)",
+  "type": "IOT"
+ },
+ "s200": {
+  "name": "GL-S200",
+  "type": "IOT"
+ },
+ "RM1": {
+  "name": "GL-RM1 Comet",
+  "type": "KVM"
+ },
+ "RM10": {
+  "name": "GL-RM10 Comet Pro",
+  "type": "KVM"
+ },
+ "RM10RC": {
+  "name": "GL-RM10RC Comet 5G",
+  "type": "KVM"
+ },
+ "RM1PE": {
+  "name": "GL-RM1PE Comet PoE",
+  "type": "KVM"
+ },
+ "RM1V2": {
+  "name": "GL-RM1V2 Comet",
+  "type": "KVM"
+ },
+ "RM4PE": {
+  "name": "GL-RM4PE Comet X",
+  "type": "KVM"
+ },
+ "RMQ1": {
+  "name": "GL-RMQ1 Comet Q",
+  "type": "KVM"
+ },
+ "zz-empty": {
+  "name": "Test <Empty> & Co",
+  "type": "IOT"
+ },
+ "api": {
+  "name": "Collision Test",
+  "type": "IOT"
+ }
+}
