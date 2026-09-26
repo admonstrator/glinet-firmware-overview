@@ -100,7 +100,7 @@ class OverviewDevicePagesTests(unittest.TestCase):
         page = self.read('index.html')
         row = page.split('<tr id="mt6000"', 1)[1].split('</tr>', 1)[0]
         self.assertEqual(row.count('class="ver dead"'), 2)
-        self.assertIn('href="status.html" title="Download did not respond (HTTP 404 Not Found)', row)
+        self.assertIn('href="status.html#mt6000-release" title="Download did not respond (HTTP 404 Not Found)', row)
         self.assertIn('title="Download did not respond (timeout)', row)
         self.assertIn('href="https://fw.gl-inet.com/firmware/mt6000/release/mt6000-4.7.9-fixture.bin"', row)
         self.assertIn('4.7.9 instead', row)

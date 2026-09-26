@@ -44,7 +44,7 @@ def date_html(entry, now):
     return f'Released <time datetime="{d.isoformat()}" title="{age_text(days_since(entry, now))}">{d.isoformat()}</time>'
 
 
-def build_block(stage, entry, now, open_changelog):
+def build_block(stage, entry, now, open_changelog, code=''):
     """One stage: version, date, "new" tag, download (or warning and fallback), MD5, changelog."""
     s_api = api_stage_name(stage)
     cls = stage_class(stage)
@@ -68,7 +68,7 @@ def build_block(stage, entry, now, open_changelog):
         else:
             detail = 'No older build downloads either.'
         warn = (f'\n      <p class="warnline">{icon("warn")}<span>The download of {version} did not respond in the last check '
-                f'({reason}). {detail} <a href="../status.html">Link status</a></span></p>')
+                f'({reason}). {detail} <a href="../status.html{'#' + code.lower() + '-' + s_api if code else ''}">Link status</a></span></p>')
     md5 = ((entry.get('download') or [{}])[0].get('md5') or '').strip()
     md5_html = f'\n      <p class="md5">MD5 <code>{esc(md5)}</code></p>' if md5 else ''
     changelog = (entry.get('changelog') or '').strip()
@@ -144,7 +144,7 @@ def generate_device_page(code, stages, meta, generated_at):
     with_changelog = 0
     for s in display_stages:
         has_changelog = bool((stages[s].get('changelog') or '').strip())
-        blocks.append(build_block(s, stages[s], now, open_changelog=has_changelog and not with_changelog))
+        blocks.append(build_block(s, stages[s], now, open_changelog=has_changelog and not with_changelog, code=code))
         with_changelog += has_changelog
     if blocks:
         body = f'<div class="builds">{"".join(blocks)}\n  </div>'

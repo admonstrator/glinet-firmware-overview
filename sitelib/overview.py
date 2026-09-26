@@ -75,14 +75,14 @@ def open_tag(stage, entry):
     return f'<span class="tag op" title="OpenWrt {label[2:]} open build">{label}</span>'
 
 
-def version_html(entry, cls, root=''):
+def version_html(entry, cls, root='', status_anchor=''):
     """Version as a download link, or muted with a warning (and the fallback build) when the
     download did not respond in the last build. Returns (version_html, fallback_html)."""
     version = esc(entry.get('version', 'N/A'))
     if not entry.get('_link_ok', True):
         reason = esc(entry.get('_link_reason') or 'unknown', quote=True)
         html = (f'<span class="ver dead">{version}</span> '
-                f'<a class="warn" href="{root}status.html" title="Download did not respond ({reason}), see the link status page">'
+                f'<a class="warn" href="{root}status.html{'#' + status_anchor if status_anchor else ''}" title="Download did not respond ({reason}), see the link status page">'
                 f'{icon("warn")}<span class="visually-hidden">Download did not respond</span></a>')
         fallback = ''
         if entry.get('_fallback_link'):
@@ -106,7 +106,7 @@ def time_html(entry, text=None, title=''):
 
 def build_html(code, stage, entry, now):
     """One build inside a table cell: version, tags, date and changelog link."""
-    ver, fallback = version_html(entry, stage_class(stage))
+    ver, fallback = version_html(entry, stage_class(stage), status_anchor=f'{code.lower()}-{api_stage_name(stage)}')
     tag = open_tag(stage, entry)
     fresh = (f' <span class="tag fresh" title="Released {age_text(days_since(entry, now))}">new</span>'
              if is_fresh(entry, now) else '')
@@ -191,7 +191,7 @@ def recent_item_html(b):
     page = device_page_url(code)
     device = (f'<a class="dev" href="{page}#{api_stage_name(stage)}">{label}</a>' if page
               else f'<span class="dev">{label}</span>')
-    ver, _ = version_html(entry, stage_class(stage))
+    ver, _ = version_html(entry, stage_class(stage), status_anchor=f"{b['code'].lower()}-{api_stage_name(stage)}")
     when = time_html(entry, age_text(b['days']), build_date(entry).isoformat() if build_date(entry) else '')
     return f'\n      <li>{device}<div class="line"><span>{stage_title(stage, entry)}</span>{ver}{when}</div></li>'
 

@@ -11,8 +11,8 @@ sys.path.insert(0, HERE)
 import build_offline  # noqa: E402
 import check_site  # noqa: E402
 
-# The lead flips this to False once every HTML page is rendered with sitelib.design.
-EXTERNAL_ASSETS_ALLOWED = True
+# Every HTML page is rendered with sitelib.design: no stylesheet, script, image or font from another host.
+EXTERNAL_ASSETS_ALLOWED = False
 
 
 class SiteTests(unittest.TestCase):

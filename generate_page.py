@@ -411,7 +411,7 @@ def write_step_summary(diagnostics, empty_models):
     with open(path, 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
 
-def generate_api_files(models, models_metadata, diagnostics, empty_models):
+def generate_api_files(models, models_metadata, diagnostics, empty_models, generated_at=None):
     api_dir = 'api'
     if os.path.exists(api_dir):
         shutil.rmtree(api_dir)
@@ -507,7 +507,7 @@ def generate_api_files(models, models_metadata, diagnostics, empty_models):
 
     unreachable = [d for d in diagnostics if d['status'] == 'unreachable']
     status_data = {
-        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+        'generated_at': generated_at or datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
         'link_timeout_seconds': LINK_TIMEOUT,
         'link_attempts': LINK_ATTEMPTS,
         'summary': {
@@ -526,7 +526,7 @@ def write_site(models, models_metadata, diagnostics, empty_models, generated_at)
     """Write the whole site into the current directory. No network access happens here,
     so tests/build_offline.py can call it with fixture data. Returns the number of device pages."""
     print("Generating API files...")
-    generate_api_files(models, models_metadata, diagnostics, empty_models)
+    generate_api_files(models, models_metadata, diagnostics, empty_models, generated_at)
 
     print(f"Generating device pages for {len(models)} models...")
     pages_written = generate_device_pages(models, models_metadata, generated_at)
