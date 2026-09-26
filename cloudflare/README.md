@@ -59,16 +59,22 @@ Rule 2 also spares terminal users the GitHub Pages redirect from `/mt3000` to
 
 ## What this gives you
 
+The generator writes a small menu tree of text pages; the two rules above cover
+all of them, no per-page rule is needed:
+
 ```
-curl https://firmware.gl-i.net/                          overview of all models
+curl https://firmware.gl-i.net/                          menu
+curl https://firmware.gl-i.net/routers                   one category (iot, kvm, all)
 curl https://firmware.gl-i.net/mt3000                    one model
-curl https://firmware.gl-i.net/api/mt3000/branches       stages (already plain text)
-curl https://firmware.gl-i.net/api/mt3000/release/version
-curl https://firmware.gl-i.net/api/mt3000/release/changelog
+curl https://firmware.gl-i.net/mt3000/release            one build with its changelog
+curl -s https://firmware.gl-i.net/cli | sh               interactive menu (cli.sh)
+curl https://firmware.gl-i.net/api/mt3000/branches       flat-file API (always plain text)
 ```
 
-Browsers keep getting the HTML pages; the `.txt` twins can always be fetched
-directly as well (`/index.txt`, `/mt3000/index.txt`).
+Browsers keep getting the HTML pages; the directories that only exist for their
+`index.txt` (`/routers/`, `/all/`, `/<model>/<stage>/`) carry a tiny redirect
+page, and `/cli/` a page that explains the terminal menu. The `.txt` twins can
+always be fetched directly as well (`/index.txt`, `/mt3000/index.txt`).
 
 ## Notes
 
