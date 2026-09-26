@@ -4,6 +4,7 @@ Global feed: the newest GLOBAL_FEED_LIMIT builds across all devices, every stage
 RECENT_EXCLUDED_STAGES (snapshots appear too often). Device feed: every stage of one device,
 snapshots included. One entry per build; the entry id stays the same as long as the version does.
 """
+import html as html_lib
 import os
 import re
 from datetime import datetime
@@ -15,7 +16,7 @@ from sitelib.core import *  # noqa: F401,F403
 CHANGELOG_LIMIT = 2000
 
 # Characters XML 1.0 does not allow at all; GL.iNet changelogs occasionally carry control characters.
-_XML_INVALID = re.compile('[^\t\n\r -퟿-�\U00010000-\U0010ffff]')
+_XML_INVALID = re.compile('[^\t\n\r%s-%s%s-%s%s-%s]' % tuple(map(chr, (0x20, 0xD7FF, 0xE000, 0xFFFD, 0x10000, 0x10FFFF))))
 
 
 def _text(value):
@@ -50,16 +51,12 @@ def display_name(code, name):
 
 
 def build_page_url(code, stage):
-    """Absolute browser URL of one build, or the overview for model codes without a device page.
-
-    /<model>/<stage>/ is the stage directory: curl gets its index.txt, browsers get a stub that
-    redirects to the stage block /<model>/#<stage> of the device page. The feed links the stage
-    directory rather than the #fragment URL because tests/check_site.py resolves feed links as
-    files and does not strip fragments."""
+    """Absolute browser URL of one build: the stage block /<model>/#<stage> of the device page,
+    or the overview for model codes without a device page."""
     page = device_page_url(code)
     if page is None:
         return f'{SITE_URL}/'
-    return f'{SITE_URL}/{page}{api_stage_name(stage)}/'
+    return f'{SITE_URL}/{page}#{api_stage_name(stage)}'
 
 
 def shorten_changelog(text, limit=CHANGELOG_LIMIT):
@@ -75,30 +72,54 @@ def shorten_changelog(text, limit=CHANGELOG_LIMIT):
     return text[:cut].rstrip(), True
 
 
+def _h(value):
+    """Escape a value for HTML text (the whole HTML is XML-escaped once more by _text())."""
+    return html_lib.escape(str(value), quote=False)
+
+
+def _link(url, label=None):
+    return f'<a href="{html_lib.escape(url, quote=True)}">{_h(label or url)}</a>'
+
+
+def changelog_html(text):
+    """Plain-text changelog as HTML: blank lines separate <p> paragraphs, single line breaks become <br>."""
+    text = (text or '').replace('\r\n', '\n').replace('\r', '\n').strip()
+    paragraphs = []
+    for block in re.split(r'\n[ \t]*\n', text):
+        lines = [_h(line.rstrip()) for line in block.strip('\n').split('\n')]
+        if any(lines):
+            paragraphs.append('<p>' + '<br>'.join(lines) + '</p>')
+    return '\n'.join(paragraphs)
+
+
 def entry_content(code, stage, entry):
-    """Plain-text entry body: version, date, download, then the (possibly shortened) changelog."""
-    s_api = api_stage_name(stage)
+    """HTML entry body (Atom content type="html"): one paragraph with version, date, download
+    (and the fallback for a dead link) and MD5, then the changelog, shortened after
+    CHANGELOG_LIMIT characters with a link to the full text."""
     link = entry_link(entry)
     md5_hash = (entry.get('download') or [{}])[0].get('md5', '') or ''
-    lines = [f"Version: {entry.get('version', 'N/A')}",
-             f"Released: {entry.get('release_time') or 'unknown'} (as published by GL.iNet)",
-             f"Download: {link or 'none published'}"]
+    facts = [f"Version {_h(entry.get('version', 'N/A'))}, released {_h(entry.get('release_time') or 'unknown')} "
+             f"(as published by GL.iNet)",
+             f"Download: {_link(link, link.rsplit('/', 1)[-1]) if link else 'none published'}"]
     if md5_hash:
-        lines.append(f'MD5: {md5_hash}')
+        facts.append(f'MD5: <code>{_h(md5_hash)}</code>')
     if not entry.get('_link_ok', True):
         reason = entry.get('_link_reason') or 'no response'
-        lines.append(f'Link check: this download did not respond in the last check ({reason}); the version stays listed.')
+        facts.append(f'This download did not respond in the last check ({_h(reason)}); the version stays listed.')
         if entry.get('_fallback_link'):
             fb_date = (entry.get('_fallback_release_time') or '')[:10]
-            fb_when = f' (released {fb_date})' if fb_date else ''
-            lines.append(f"Fallback: the related download of this entry is {entry.get('_fallback_version', 'N/A')}{fb_when}, "
-                         f"the newest build whose download responds: {entry['_fallback_link']}")
+            fb_when = f' (released {_h(fb_date)})' if fb_date else ''
+            facts.append(f"Newest build whose download responds: "
+                         f"{_link(entry['_fallback_link'], entry.get('_fallback_version', 'N/A'))}{fb_when}, "
+                         f"linked as the related download of this entry.")
+    parts = ['<p>' + '<br>\n'.join(facts) + '</p>']
     changelog, shortened = shorten_changelog(entry.get('changelog'))
-    full_url = f'{SITE_URL}/api/{code.lower()}/{s_api}/changelog'
-    lines += ['', 'Changelog:', changelog or '(no changelog published for this build)']
+    parts.append('<p><strong>Changelog</strong></p>')
+    parts.append(changelog_html(changelog) or '<p>No changelog published for this build.</p>')
     if shortened:
-        lines += ['[...]', f'Full changelog: {full_url}']
-    return '\n'.join(lines)
+        full_url = f'{SITE_URL}/api/{code.lower()}/{api_stage_name(stage)}/changelog'
+        parts.append(f"<p>[...] {_link(full_url, 'Full changelog')}</p>")
+    return '\n'.join(parts)
 
 
 def feed_entry(code, name, stage, entry, fallback_updated):
@@ -121,7 +142,7 @@ def feed_entry(code, name, stage, entry, fallback_updated):
         parts.append(f'    <link rel="related" href="{_attr(download)}"/>')
     parts += [
         f'    <category term="{_attr(api_stage_name(stage))}" label="{_attr(stage_title(stage, entry))}"/>',
-        f'    <content type="text">{_text(entry_content(code, stage, entry))}</content>',
+        f'    <content type="html">{_text(entry_content(code, stage, entry))}</content>',
         '  </entry>',
     ]
     return '\n'.join(parts)

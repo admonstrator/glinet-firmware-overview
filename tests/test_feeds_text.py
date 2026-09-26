@@ -9,6 +9,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from html.parser import HTMLParser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -21,6 +22,32 @@ from sitelib import core, feeds  # noqa: E402
 
 A = '{http://www.w3.org/2005/Atom}'
 RFC3339 = re.compile(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$')
+
+
+class ContentHTML(HTMLParser):
+    """Parse the HTML of an Atom content element: text, links and tags."""
+
+    def __init__(self, markup):
+        super().__init__(convert_charrefs=True)
+        self.text, self.hrefs, self.tags = '', [], []
+        self.feed(markup)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append(tag)
+        if tag == 'a':
+            self.hrefs.append(dict(attrs).get('href'))
+
+    def handle_data(self, data):
+        self.text += data
+
+
+def html_content(entry):
+    """The parsed HTML of an entry's <content type="html"> (asserts it has no XML child elements)."""
+    content = entry.find(f'{A}content')
+    assert content.get('type') == 'html', content.get('type')
+    assert len(content) == 0, 'content must be escaped HTML, not XML child elements'
+    return ContentHTML(content.text or '')
 
 
 class FeedTextSiteTests(unittest.TestCase):
@@ -81,13 +108,15 @@ class FeedTextSiteTests(unittest.TestCase):
         self.assertEqual(entry.findtext(f'{A}updated'), '2026-09-20T18:00:48Z')
         self.assertEqual(entry.findtext(f'{A}published'), '2026-09-20T18:00:48Z')
         links = {link.get('rel'): link.get('href') for link in entry.findall(f'{A}link')}
-        self.assertEqual(links['alternate'], f'{core.SITE_URL}/be3600/release/')
+        self.assertEqual(links['alternate'], f'{core.SITE_URL}/be3600/#release')
         self.assertEqual(links['related'], core.entry_link(self.models['be3600']['RELEASE']))
-        content = entry.find(f'{A}content')
-        self.assertEqual(content.get('type'), 'text')
-        self.assertIn('Version: 4.10.1', content.text)
-        self.assertIn(links['related'], content.text)
-        self.assertIn('Changelog:', content.text)
+        content = html_content(entry)
+        self.assertIn('Version 4.10.1', content.text)
+        self.assertEqual(content.hrefs, [links['related']])
+        self.assertIn('Changelog', content.text)
+        # paragraphs survive: the fixture changelog has several blank-line separated blocks
+        self.assertGreater(content.tags.count('p'), 3)
+        self.assertNotIn('<', content.text)
 
     def test_all_dates_are_rfc3339(self):
         for path in glob.glob(os.path.join(self.out, '*.xml')) + glob.glob(os.path.join(self.out, '*', 'feed.xml')):
@@ -110,10 +139,10 @@ class FeedTextSiteTests(unittest.TestCase):
                 continue
             related = [link.get('href') for link in entry.findall(f'{A}link') if link.get('rel') == 'related']
             self.assertEqual(related, [info['_fallback_link']])
-            text = entry.findtext(f'{A}content')
-            self.assertIn('did not respond', text)
-            self.assertIn(info['_fallback_version'], text)
-            self.assertIn(core.entry_link(info), text)
+            content = html_content(entry)
+            self.assertIn('did not respond', content.text)
+            self.assertIn(info['_fallback_version'], content.text)
+            self.assertEqual(content.hrefs, [core.entry_link(info), info['_fallback_link']])
 
     def test_device_feed_has_every_stage(self):
         root = self.feed('mt6000', 'feed.xml')
@@ -122,6 +151,19 @@ class FeedTextSiteTests(unittest.TestCase):
         terms = sorted(e.find(f'{A}category').get('term') for e in root.findall(f'{A}entry'))
         self.assertEqual(terms, sorted(core.api_stage_name(s) for s in self.models['mt6000']))
         self.assertIn('snapshot', terms)
+
+    def test_alternate_links_point_at_stage_blocks(self):
+        for e in self.feed('mt6000', 'feed.xml').findall(f'{A}entry'):
+            term = e.find(f'{A}category').get('term')
+            alternate = [link.get('href') for link in e.findall(f'{A}link') if link.get('rel') == 'alternate']
+            self.assertEqual(alternate, [f'{core.SITE_URL}/mt6000/#{term}'])
+
+    def test_contents_are_escaped_html(self):
+        for path in glob.glob(os.path.join(self.out, '*.xml')) + glob.glob(os.path.join(self.out, '*', 'feed.xml')):
+            for e in ET.parse(path).getroot().findall(f'{A}entry'):
+                content = html_content(e)
+                self.assertTrue(content.hrefs, path)
+                self.assertNotIn('&amp;', content.text, f'double escaping in {path}')
 
     def test_empty_and_reserved_models(self):
         root = self.feed('zz-empty', 'feed.xml')
@@ -227,8 +269,15 @@ class FeedHelperTests(unittest.TestCase):
         entry = {'version': '4.9.0', 'release_time': '2026-09-20 10:00:00', '_link_ok': True,
                  'download': [{'link': 'https://fw.gl-inet.com/x.bin', 'md5': ''}], 'changelog': 'x\n' * 3000}
         content = feeds.entry_content('MT3000', 'RELEASE', entry)
-        self.assertIn(f'Full changelog: {core.SITE_URL}/api/mt3000/release/changelog', content)
-        self.assertLess(len(content), feeds.CHANGELOG_LIMIT + 500)
+        parsed = ContentHTML(content)
+        self.assertIn(f'{core.SITE_URL}/api/mt3000/release/changelog', parsed.hrefs)
+        self.assertIn('Full changelog', parsed.text)
+        self.assertLess(len(parsed.text), feeds.CHANGELOG_LIMIT + 500)
+
+    def test_changelog_html(self):
+        html = feeds.changelog_html('V4.9.0\r\n\r\nNew Features\nMesh: <b>on</b> & more\n  \nBug Fixes')
+        self.assertEqual(html, '<p>V4.9.0</p>\n<p>New Features<br>Mesh: &lt;b&gt;on&lt;/b&gt; &amp; more</p>\n<p>Bug Fixes</p>')
+        self.assertEqual(feeds.changelog_html(''), '')
 
     def test_escaping_and_control_characters(self):
         entry = {'version': '1.0', 'release_time': '', '_link_ok': True, 'download': [{'link': 'https://x/a?b=1&c=2'}],
@@ -240,7 +289,10 @@ class FeedHelperTests(unittest.TestCase):
         e = root.find(f'{A}entry')
         self.assertEqual(e.findtext(f'{A}title'), 'Test & Co (GL-X1): Beta OP24 1.0')
         self.assertEqual(e.findtext(f'{A}updated'), '2026-09-26T13:23:07Z')  # no release_time: build time
-        self.assertIn('a < b & c done', e.findtext(f'{A}content'))
+        content = html_content(e)
+        self.assertIn('a < b & c done', content.text)
+        self.assertEqual(content.hrefs, ['https://x/a?b=1&c=2'])
+        self.assertIn('a &amp;lt; b &amp;amp; c done', xml)  # escaped for HTML, then once for XML
         self.assertEqual(e.find(f'{A}category').get('term'), 'beta-open24')
 
 
