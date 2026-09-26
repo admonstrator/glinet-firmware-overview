@@ -39,9 +39,13 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 - 🔍 **Link Validation** – Every download link is verified with a `HEAD` request, retried on temporary failures. An unreachable link never changes which version is listed; it is flagged instead, and the newest older build that still downloads is offered as a second link
 - 🩺 **Status Page** – [`/status.html`](https://firmware.gl-i.net/status.html) lists every download that could not be reached, with the reason, the number of attempts and the latest reachable build
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
-- 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
+- 🪶 **Works Without JavaScript** – The official firmware page needs JavaScript; this one is plain HTML with no external assets, about 15 KB compressed, readable on slow connections and with scripts blocked
+- 📊 **Categorized Dashboard** – One table per device type, filter by type without JavaScript, search as a small progressive enhancement, dark mode
 - 🔗 **Device Deep Links** – Every model has its own page at `/<model>/` that can be linked directly
-- ⚡ **Last Updated Badges** – Track exactly when the data was last verified
+- 🆕 **Recently Released** – Builds from the last 14 days at the top of the dashboard and as text at `/new`
+- 🕰️ **Last Update per Device** – How long ago each device got its newest build
+- 📰 **Atom Feeds** – [`/feed.xml`](https://firmware.gl-i.net/feed.xml) for all devices, `/<model>/feed.xml` for one device
+- 📖 **API & Terminal Docs** – [`/docs/`](https://firmware.gl-i.net/docs/) explains the menu, the text pages, the flat-file API and the feeds
 
 ---
 
@@ -75,6 +79,7 @@ This project serves as a machine-readable API. You can access version informatio
 ```
 curl https://firmware.gl-i.net/                  menu
 curl https://firmware.gl-i.net/routers           one category (also: iot, kvm, all)
+curl https://firmware.gl-i.net/new               builds from the last 14 days
 curl https://firmware.gl-i.net/mt3000            one device
 curl https://firmware.gl-i.net/mt3000/release    one build with its changelog
 ```
@@ -87,7 +92,12 @@ curl -s https://firmware.gl-i.net/cli | sh       # or:  wget -qO- https://firmwa
 
 It browses categories and devices, searches by name, shows changelogs and downloads a build into the current directory (with MD5 check where GL.iNet publishes one). The script is [`cli.sh`](cli.sh) in this repository. Scripts that want to avoid JSON can use the tab-separated index files `/api/models` and `/api/<model>/stages`.
 
-The Cloudflare setup is described in [`cloudflare/README.md`](cloudflare/README.md).
+The full reference is on the site at [`/docs/`](https://firmware.gl-i.net/docs/) (also as text: `curl https://firmware.gl-i.net/docs`). The Cloudflare setup is described in [`cloudflare/README.md`](cloudflare/README.md).
+
+### 📰 Feeds
+
+- `https://firmware.gl-i.net/feed.xml`: the newest 50 builds across all devices, without snapshots
+- `https://firmware.gl-i.net/<model>/feed.xml`: every stage of one device, e.g. [`/mt3000/feed.xml`](https://firmware.gl-i.net/mt3000/feed.xml)
 
 ---
 
@@ -99,7 +109,19 @@ Every tracked model has its own small page that can be linked directly, e.g. in 
 
 **Example:** [https://firmware.gl-i.net/mt3000/](https://firmware.gl-i.net/mt3000/)
 
-Each page lists all verified firmware stages of the model with version, release date, download link and changelog, plus the API endpoints for that model. The model names in the dashboard link to these pages as well.
+Each page lists all verified firmware stages of the model with version, release date, download link and changelog, when the device was last updated, its feed and the terminal commands for that model. The model names in the dashboard link to these pages as well.
+
+---
+
+## 🧪 Development
+
+The generator is `generate_page.py`; the page renderers live in `sitelib/`. Tests need only Python:
+
+```
+python3 -m unittest discover -s tests              # unit tests plus an offline build of the whole site
+python3 tests/build_offline.py --out /tmp/site     # render the fixture site to look at it
+python3 tests/check_site.py /tmp/site --no-external-assets
+```
 
 ---
 
