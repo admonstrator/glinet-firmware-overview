@@ -54,6 +54,8 @@ This project serves as a machine-readable API. You can access version informatio
 | `/api/all.json` | Consolidated JSON of all tracked models and versions |
 | `/api/status.json` | Build report: unreachable downloads with reason and attempt count, models the API returned no data for |
 | `/api/<model>/branches` | Text file listing available firmware stages for a model |
+| `/api/models` | Tab-separated: model code, type, name, release version |
+| `/api/<model>/stages` | Tab-separated: stage, version, date, download URL, MD5, link state, fallback version, fallback URL |
 | `/api/<model>/<stage>/version` | Returns only the version string (e.g., `4.5.0`) |
 | `/api/<model>/<stage>/url` | Returns the direct download URL for the firmware |
 | `/api/<model>/<stage>/date` | Returns the release date |
@@ -68,7 +70,25 @@ This project serves as a machine-readable API. You can access version informatio
 
 ### 🖥️ Plain text in the terminal
 
-`curl https://firmware.gl-i.net/` and `curl https://firmware.gl-i.net/mt3000` answer with plain text instead of HTML: Cloudflare rewrites requests from `curl`, `wget`, HTTPie or any client sending `Accept: text/plain` to the text twin of each page (`/index.txt`, `/<model>/index.txt`), which can also be fetched directly. The setup is described in [`cloudflare/README.md`](cloudflare/README.md).
+`curl` gets plain text instead of HTML: Cloudflare rewrites requests from `curl`, `wget`, HTTPie or any client sending `Accept: text/plain` to the text twin of each page (`/index.txt`, `/<model>/index.txt`, ...), which can also be fetched directly. The pages form a small menu, each one ends with the commands for the next step:
+
+```
+curl https://firmware.gl-i.net/                  menu
+curl https://firmware.gl-i.net/routers           one category (also: iot, kvm, all)
+curl https://firmware.gl-i.net/mt3000            one device
+curl https://firmware.gl-i.net/mt3000/release    one build with its changelog
+```
+
+There is also an interactive menu that runs on anything with a POSIX shell, including BusyBox on the router itself:
+
+```
+curl -s https://firmware.gl-i.net/cli | sh       # or:  wget -qO- https://firmware.gl-i.net/cli | sh
+```
+
+It browses categories and devices, searches by name, shows changelogs and downloads a build into the current directory (with MD5 check where GL.iNet publishes one). The script is [`cli.sh`](cli.sh) in this repository. Scripts that want to avoid JSON can use the tab-separated index files `/api/models` and `/api/<model>/stages`.
+
+The Cloudflare setup is described in [`cloudflare/README.md`](cloudflare/README.md).
+
 ---
 
 ## 🔗 Device Pages
