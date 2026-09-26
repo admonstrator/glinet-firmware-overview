@@ -1,235 +1,272 @@
-"""The overview page (index.html)."""
+"""The overview page (index.html): toolbar, recently released builds and one table per category."""
 import html as html_lib
+from datetime import datetime
 
-from sitelib.core import *  # noqa: F401,F403
-from sitelib.design import *  # noqa: F401,F403
+from sitelib.core import (FRESH_DAYS, RECENT_DAYS, SITE_NAME, SITE_URL, age_short, age_text, api_stage_name,
+                          build_date, days_since, device_page_url, entry_link, feed_url, group_models_by_type,
+                          is_fresh, latest_update, ordered_stages, overview_stage_columns, parse_generated_at,
+                          recent_builds, split_name, stage_class, stage_title)
+from sitelib.design import icon, page_head, site_footer, site_header
+
+# Category order, section id (also the target of the device page breadcrumbs), filter label, section title
+CATEGORIES = [
+    ('ROUTER', 'router', 'Routers', 'Routers'),
+    ('IOT', 'iot', 'IoT', 'IoT devices'),
+    ('KVM', 'kvm', 'KVM', 'KVM over IP (Comet)'),
+]
+CATEGORY_LABELS = {key: label for key, _, label, _ in CATEGORIES}
+CATEGORY_IDS = {key: slug for key, slug, _, _ in CATEGORIES}
+CATEGORY_TITLES = {key: title for key, _, _, title in CATEGORIES}
+
+# Ids used by the page itself; a table row never takes one of these as its model anchor
+PAGE_IDS = {'recent', 'recent-h', 'search', 'q', 'nomatch', 'router', 'iot', 'kvm',
+            'f-all', 'f-router', 'f-iot', 'f-kvm'}
+
+OVERVIEW_CSS = """
+[hidden] { display: none !important; }
+.status a.bad { color: var(--rc); }
+.ver.dead { color: var(--muted); }
+a.warn { display: inline-flex; color: var(--rc); }
+.fallback { display: inline-flex; gap: 5px; align-items: center; margin-top: 2px; font-size: 12.5px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.fallback:hover { text-decoration: underline; text-underline-offset: 3px; }
+th.age, td.age { text-align: right; white-space: nowrap; }
+td.age { font-size: 13px; color: var(--muted); }
+td.age .l { display: none; }
+@media (min-width: 961px) { td.age { padding-top: 12px; } }
+.recent { margin-bottom: 30px; }
+.recent h2 { font: 600 19px/1.2 var(--display); margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.recent h2 small { font: 500 13px var(--text); color: var(--muted); }
+.recent h2 a { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; font: 500 13px var(--text); color: var(--muted); text-decoration: none; }
+.recent h2 a:hover { color: var(--ink); text-decoration: underline; }
+.recent ol { list-style: none; margin: 0; padding: 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.recent li { padding: 7px 12px; min-width: 0; }
+.recent .dev { display: block; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent .dev .nick { font-weight: 650; }
+.recent .dev .sku { font-size: 12.5px; color: var(--muted); margin-left: 4px; }
+.recent a.dev:hover .nick { text-decoration: underline; text-underline-offset: 3px; }
+.recent .line { display: flex; flex-wrap: wrap; gap: 2px 9px; align-items: baseline; font-size: 13px; color: var(--muted); }
+.recent .none { margin: 0; padding: 14px 18px; color: var(--muted); }
+@media (max-width: 960px) {
+  footer .cols { grid-template-columns: minmax(0, 1fr); }
+  th.age, td.age { text-align: left; }
+  td.age .s { display: none; }
+  td.age .l { display: inline; }
+}
+"""
+
+# Progressive enhancement, well under 1 KB: shows the search box and filters rows by code and name.
+SEARCH_JS = """(()=>{const d=document,q=d.getElementById('q'),n=d.getElementById('nomatch'),r=d.getElementById('recent');
+d.getElementById('search').hidden=false;
+const run=()=>{const t=q.value.trim().toLowerCase(),f=d.querySelector('[name=cat]:checked').id.slice(2);let any=0;
+d.querySelectorAll('.cat').forEach(s=>{let v=0;s.querySelectorAll('tbody tr').forEach(tr=>{const h=tr.dataset.search.includes(t);tr.hidden=!h;v+=h});
+s.hidden=!v;if(f=='all'||f==s.id)any+=v});r.hidden=!!t;n.style.display=any?'':'block'};
+q.addEventListener('input',run);d.querySelector('.filters').addEventListener('change',run)})();"""
+
+
+def esc(text, quote=False):
+    return html_lib.escape(str(text), quote=quote)
+
+
+def open_tag(stage, entry):
+    """'OP24' tag of an OpenWrt open build, '' for every other stage."""
+    if not stage.upper().startswith('BETA_OPEN'):
+        return ''
+    label = stage_title(stage, entry).rsplit(' ', 1)[-1]
+    return f'<span class="tag op" title="OpenWrt {label[2:]} open build">{label}</span>'
+
+
+def version_html(entry, cls, root=''):
+    """Version as a download link, or muted with a warning (and the fallback build) when the
+    download did not respond in the last build. Returns (version_html, fallback_html)."""
+    version = esc(entry.get('version', 'N/A'))
+    if not entry.get('_link_ok', True):
+        reason = esc(entry.get('_link_reason') or 'unknown', quote=True)
+        html = (f'<span class="ver dead">{version}</span> '
+                f'<a class="warn" href="{root}status.html" title="Download did not respond ({reason}), see the link status page">'
+                f'{icon("warn")}<span class="visually-hidden">Download did not respond</span></a>')
+        fallback = ''
+        if entry.get('_fallback_link'):
+            fallback = (f'<a class="fallback" href="{esc(entry["_fallback_link"], quote=True)}" '
+                        f'title="Newest build whose download works">{icon("dl")}{esc(entry.get("_fallback_version", ""))} instead</a>')
+        return html, fallback
+    link = entry_link(entry)
+    if not link:
+        return f'<span class="ver {cls}">{version}</span>', ''
+    return f'<a class="ver {cls}" href="{esc(link, quote=True)}" title="Download {version}">{version}{icon("dl")}</a>', ''
+
+
+def time_html(entry, text=None, title=''):
+    """<time> element with the release date; `text` defaults to the date itself."""
+    d = build_date(entry)
+    if d is None:
+        return ''
+    t = f' title="{esc(title, quote=True)}"' if title else ''
+    return f'<time datetime="{d.isoformat()}"{t}>{esc(text if text is not None else d.isoformat())}</time>'
+
+
+def build_html(code, stage, entry, now):
+    """One build inside a table cell: version, tags, date and changelog link."""
+    ver, fallback = version_html(entry, stage_class(stage))
+    tag = open_tag(stage, entry)
+    fresh = (f' <span class="tag fresh" title="Released {age_text(days_since(entry, now))}">new</span>'
+             if is_fresh(entry, now) else '')
+    notes = ''
+    if (entry.get('changelog') or '').strip():
+        notes = (f'<a href="api/{code.lower()}/{api_stage_name(stage)}/changelog" title="Changelog (plain text)">'
+                 f'{icon("notes")}<span class="visually-hidden">Changelog</span></a>')
+    return (f'<div class="build">{tag}{" " if tag else ""}{ver}{fresh}'
+            f'<div class="meta">{time_html(entry)}{notes}</div>{fallback}</div>')
+
+
+def last_update_html(stages, now):
+    """Right-most cell: age of the newest build of any stage."""
+    stage, entry = latest_update(stages)
+    if entry is None or build_date(entry) is None:
+        return '<td class="age empty" data-stage="Last update"></td>'
+    days = days_since(entry, now)
+    date = build_date(entry).isoformat()
+    title = esc(f'{age_text(days)}, {date} ({stage_title(stage, entry)} {entry.get("version", "")})', quote=True)
+    return (f'<td class="age" data-stage="Last update"><time datetime="{date}" title="{title}">'
+            f'<span class="s">{age_short(days)}</span><span class="l">{age_text(days)}</span></time></td>')
+
+
+def category_columns(codes, models):
+    """Stage columns one category actually uses; OpenWrt open builds live in the Beta column."""
+    sub = {c: models[c] for c in codes}
+    cols = overview_stage_columns(sub)
+    if 'BETA' not in cols and any(s.startswith('BETA_OPEN') for stages in sub.values() for s in stages):
+        cols = ordered_stages(cols + ['BETA'])
+    return cols
+
+
+def row_html(code, models, meta, cols, now):
+    stages = models[code]
+    name = meta.get('name', code)
+    nick, sku = split_name(name, code)
+    label = f'<span class="nick">{esc(nick)}</span><span class="sku">{esc(sku)}</span>'
+    page = device_page_url(code)
+    device = f'<a href="{page}">{label}</a>' if page else label
+    row_id = f' id="{esc(code.lower(), quote=True)}"' if code.lower() not in PAGE_IDS else ''
+    cells = []
+    for col in cols:
+        builds = [(col, stages[col])] if col in stages else []
+        if col == 'BETA':
+            builds += [(s, stages[s]) for s in sorted(stages) if s.startswith('BETA_OPEN')]
+        if builds:
+            cells.append(f'<td data-stage="{stage_title(col)}">{"".join(build_html(code, s, e, now) for s, e in builds)}</td>')
+        else:
+            cells.append('<td class="empty"></td>')
+    search = esc(f'{code} {name}'.lower(), quote=True)
+    return (f'\n        <tr{row_id} data-search="{search}"><th scope="row" class="model">{device}</th>'
+            f'{"".join(cells)}{last_update_html(stages, now)}</tr>')
+
+
+def category_html(m_type, codes, models, models_metadata, now):
+    slug, title = CATEGORY_IDS[m_type], CATEGORY_TITLES[m_type]
+
+    def sort_key(code):
+        nick, sku = split_name(models_metadata.get(code, {}).get('name', code), code)
+        return (nick.lower(), sku.lower(), code.lower())
+
+    codes = sorted(codes, key=sort_key)
+    cols = category_columns(codes, models)
+    head = ''.join(f'<th scope="col">{stage_title(s)}</th>' for s in cols)
+    rows = ''.join(row_html(c, models, models_metadata.get(c, {}), cols, now) for c in codes)
+    count = f'{len(codes)} device{"" if len(codes) == 1 else "s"}'
+    return f"""
+  <section class="cat" id="{slug}">
+    <h2>{title} <small>{count}</small></h2>
+    <div class="sheet"><table>
+      <thead><tr><th scope="col">Device</th>{head}<th scope="col" class="age">Last update</th></tr></thead>
+      <tbody>{rows}
+      </tbody>
+    </table></div>
+  </section>"""
+
+
+def recent_item_html(b):
+    code, stage, entry = b['code'], b['stage'], b['entry']
+    nick, sku = split_name(b['name'], code)
+    label = f'<span class="nick">{esc(nick)}</span>' + (f'<span class="sku">{esc(sku)}</span>' if sku else '')
+    page = device_page_url(code)
+    device = (f'<a class="dev" href="{page}#{api_stage_name(stage)}">{label}</a>' if page
+              else f'<span class="dev">{label}</span>')
+    ver, _ = version_html(entry, stage_class(stage))
+    when = time_html(entry, age_text(b['days']), build_date(entry).isoformat() if build_date(entry) else '')
+    return f'\n      <li>{device}<div class="line"><span>{stage_title(stage, entry)}</span>{ver}{when}</div></li>'
+
+
+def recent_html(models, models_metadata, now):
+    """'Recently released' section (id="recent", the target of /new in a browser)."""
+    builds = recent_builds(models, models_metadata, now)
+    if builds:
+        body = f'<ol class="sheet">{"".join(recent_item_html(b) for b in builds)}\n    </ol>'
+    else:
+        body = f'<p class="sheet none">No new firmware in the last {RECENT_DAYS} days.</p>'
+    return f"""
+  <section class="recent" id="recent" aria-labelledby="recent-h">
+    <h2 id="recent-h">Recently released <small>last {RECENT_DAYS} days, without snapshots</small>
+      <a href="{feed_url()}" title="Atom feed with new firmware for all devices">{icon("feed")}Feed</a></h2>
+    {body}
+  </section>"""
+
+
+def status_html(diagnostics):
+    """Link status line of the toolbar, linking to status.html."""
+    total = len(diagnostics)
+    bad = sum(1 for d in diagnostics if d.get('status') != 'ok')
+    if bad:
+        return (f'<a href="status.html" class="bad">{icon("warn")}{bad} of {total} download link'
+                f'{"" if total == 1 else "s"} unreachable</a>')
+    return f'<a href="status.html">{icon("ok")}All {total} download link{"" if total == 1 else "s"} responded</a>'
+
 
 def generate_html(models, models_metadata, diagnostics, generated_at=None):
     generated_at = generated_at or datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-    grouped_models = group_models_by_type(models, models_metadata)
-    sorted_stages = overview_stage_columns(models)
+    now = parse_generated_at(generated_at)
+    grouped = group_models_by_type(models, models_metadata)
+    total = len(models)
+    present = [(key, slug, label) for key, slug, label, _ in CATEGORIES if grouped.get(key)]
 
-    issue_count = sum(1 for d in diagnostics if d['status'] != 'ok')
-    if issue_count:
-        status_link = (f'<a href="status.html" class="text-decoration-none">'
-                       f'<i class="fas fa-triangle-exclamation text-warning"></i> '
-                       f'{issue_count} download{"" if issue_count == 1 else "s"} unreachable</a>')
-    else:
-        status_link = ('<a href="status.html" class="text-decoration-none">'
-                       '<i class="fas fa-circle-check text-success"></i> All links verified</a>')
+    filters = ''.join(f'<input type="radio" name="cat" id="f-{slug}"><label for="f-{slug}">{label}<span>{len(grouped[key])}</span></label>'
+                      for key, slug, label in present)
+    issues = any(d.get('status') != 'ok' for d in diagnostics)
+    warn_legend = f'\n    <span>{icon("warn")} Download did not respond</span>' if issues else ''
 
-    head = html_head(
-        SITE_NAME,
-        description="Latest verified GL.iNet firmware versions for all routers, IoT and KVM devices, with a flat-file API.",
-        canonical=f"{SITE_URL}/",
+    head = page_head(
+        f'{SITE_NAME} (unofficial)',
+        description='Unofficial overview of the latest GL.iNet firmware for all routers, IoT and KVM devices, '
+                    'with download links checked daily. Plain HTML, plain text for curl and a flat-file API.',
+        canonical=f'{SITE_URL}/',
+        root='',
+        feeds=[('All devices', feed_url())],
+        extra_css=OVERVIEW_CSS,
     )
-
-    html = f"""
-<!DOCTYPE html>
-<html lang="en">
-{head}
-<body>
-
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-12 text-center mb-4">
-            <h1><i class="fas fa-microchip text-primary"></i> GL.iNet Firmware Overview</h1>
-            <p class="lead">Latest verified firmware versions</p>
-            <div class="mb-2">
-                <span class="badge bg-info text-dark">Community Project by <a href="https://admon.me" target="_blank" class="text-dark text-decoration-none fw-bold">admon (admon.me)</a></span>
-            </div>
-            <p class="timestamp mb-1">Last updated: {generated_at}</p>
-            <p class="timestamp">{status_link}</p>
-        </div>
+    header = site_header('', SITE_NAME,
+                         lead=f'The latest firmware for {total} GL.iNet routers, IoT and KVM devices on one light page.')
+    tables = ''.join(category_html(key, grouped[key], models, models_metadata, now) for key, _, _ in present)
+    main = f"""<main class="wrap">
+  <div class="toolbar">
+    <label class="search" id="search" hidden><span class="visually-hidden">Search devices</span>{icon("search")}<input type="search" id="q" placeholder="Search, e.g. Flint or MT3000" autocomplete="off"></label>
+    <noscript><p class="find-hint">Looking for a device? Use your browser's find (Ctrl+F or Cmd+F).</p></noscript>
+    <div class="filters" role="radiogroup" aria-label="Device type">
+      <input type="radio" name="cat" id="f-all" checked><label for="f-all">All<span>{total}</span></label>{filters}
     </div>
-
-    <div id="recent"></div>
-    <div class="row justify-content-center search-container">
-        <div class="col-md-8">
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="searchInput" class="form-control form-control-lg border-start-0" placeholder="Search for model (e.g. AX1800) or code (e.g. flint)...">
-            </div>
-        </div>
+    <div class="status">
+      <span>Updated <time datetime="{now.strftime('%Y-%m-%dT%H:%M:%SZ')}">{now.strftime('%Y-%m-%d %H:%M')} UTC</time></span>
+      {status_html(diagnostics)}
     </div>
-
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-10">
-            <div class="accordion shadow-sm" id="apiAccordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="headingAPI">
-                        <button class="accordion-button collapsed fw-bold bg-white text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAPI" aria-expanded="false" aria-controls="collapseAPI">
-                            <i class="fas fa-code me-2"></i> How to use the Flat-File API
-                        </button>
-                    </h2>
-                    <div id="collapseAPI" class="accordion-collapse collapse" aria-labelledby="headingAPI" data-bs-parent="#apiAccordion">
-                        <div class="accordion-body api-info m-0 border-top">
-                            <p class="small mb-2">
-                                This dashboard provides a machine-readable flat-file API. You can access firmware information directly:
-                            </p>
-                            <ul class="small mb-0">
-                                <li><strong>Available stages:</strong> <code>/api/&lt;model&gt;/branches</code> (e.g., <code>/api/ax1800/branches</code>)</li>
-                                <li><strong>Version string:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/version</code> (e.g., <code>/api/ax1800/release/version</code>)</li>
-                                <li><strong>Download URL:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/url</code></li>
-                                <li><strong>Latest changelog:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/changelog</code></li>
-                                <li><strong>Specific attributes:</strong> <code>/api/&lt;model&gt;/&lt;stage&gt;/[version|url|date|hash|changelog]</code></li>
-                                <li><strong>Consolidated data:</strong> <code>/api/all.json</code></li>
-                                <li><strong>Build &amp; link status:</strong> <code>/api/status.json</code> (see the <a href="status.html">status page</a>)</li>
-                                <li><strong>Device page (deep link):</strong> <code>/&lt;model&gt;/</code> (e.g., <a href="{device_page_url('ax1800')}"><code>/ax1800/</code></a>) &ndash; click a model name below</li>
-                                <li><strong>Terminal:</strong> <code>curl {SITE_URL}/</code> answers with a plain-text menu, <code>curl -s {SITE_URL}/cli | sh</code> starts an <a href="cli/">interactive menu</a> (works on the router too)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    """
-
-    for m_type in ['ROUTER', 'IOT', 'KVM']:
-        codes = grouped_models.get(m_type, [])
-        if not codes:
-            continue
-            
-        icon = TYPE_ICONS.get(m_type, 'fa-device')
-        name = TYPE_NAMES.get(m_type, m_type)
-
-        html += f"""
-    <h3 class="section-title" id="{m_type.lower()}"><i class="fas {icon} text-primary"></i> {name}</h3>
-    <div class="card mb-5">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 firmware-table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col" class="ps-4" style="min-width: 200px;">Model</th>
-                            {''.join([f'<th scope="col">{s}</th>' for s in sorted_stages])}
-                        </tr>
-                    </thead>
-                    <tbody>
-        """
-
-        for code in codes:
-            meta = models_metadata.get(code, {})
-            full_name = html_lib.escape(meta.get('name', code))
-            page_url = device_page_url(code)
-            name_html = f'<a href="{page_url}" class="model-link" title="Open device page for {full_name}">{full_name} <i class="fas fa-link ms-1"></i></a>' if page_url else full_name
-            
-            html += f"""
-            <tr id="{code.lower()}">
-                <td class='ps-4'>
-                    <div class="fw-bold">{name_html}</div>
-                    <div class="text-muted small" style="font-size: 0.7rem;">{html_lib.escape(code)}</div>
-                </td>
-            """
-            for stage in sorted_stages:
-                info = models[code].get(stage)
-                # Gather all OpenWrt "open" variants (op24, op25, ...) alongside the BETA column
-                open_stages = sorted(s for s in models[code] if s.startswith('BETA_OPEN')) if stage == 'BETA' else []
-                # (actual_stage, entry) pairs to render in this cell
-                render_list = [(stage, info)] if info else []
-                render_list += [(s, models[code][s]) for s in open_stages]
-                if render_list:
-                    cells = []
-                    for entry_stage, entry_info in render_list:
-                        version = entry_info.get('version', 'N/A')
-                        release_time = entry_info.get('release_time', '').split(' ')[0]
-                        download_link = entry_link(entry_info) or '#'
-                        changelog_text = (entry_info.get('changelog') or '').strip()
-                        timestamp_html = f'<span class="timestamp">{release_time}</span>'
-                        if changelog_text:
-                            changelog_path = f"api/{code.lower()}/{api_stage_name(entry_stage)}/changelog"
-                            timestamp_html = f'<a class="timestamp text-decoration-none" href="{changelog_path}" target="_blank" title="Open latest changelog TXT">{release_time} <i class="fas fa-file-lines small ms-1"></i></a>'
-                        open_badge = open_badge_html(entry_info)
-                        fallback_html = ''
-                        if entry_info.get('_link_ok', True):
-                            version_html = (f'<a href="{download_link}" target="_blank" '
-                                            f'class="fw-version text-decoration-none stage-{stage}">'
-                                            f'{version} <i class="fas fa-download small ms-1"></i></a>')
-                        else:
-                            # The version stays published; only the download is marked as broken.
-                            hint = html_lib.escape(
-                                f"Download link unreachable ({entry_info.get('_link_reason', 'unknown')}) "
-                                f"- see the status page", quote=True)
-                            version_html = (f'<span class="fw-version text-muted">{version}</span> '
-                                            f'<a href="status.html" class="text-decoration-none" title="{hint}">'
-                                            f'<i class="fas fa-triangle-exclamation small text-warning"></i></a>')
-                            if entry_info.get('_fallback_link'):
-                                fb_version = entry_info['_fallback_version']
-                                fb_link = html_lib.escape(entry_info['_fallback_link'], quote=True)
-                                fallback_html = (
-                                    f'<a href="{fb_link}" target="_blank" class="fallback-link text-decoration-none" '
-                                    f'title="Newest version with a working download">'
-                                    f'<i class="fas fa-download small me-1"></i>{fb_version} instead</a>')
-                        cells.append(f'''
-                                <div class="d-flex flex-column{'  border-top pt-1 mt-1' if entry_info.get('_is_open') and info else ''}">
-                                    {version_html}
-                                    <div>{timestamp_html}{open_badge}</div>
-                                    {fallback_html}
-                                </div>''')
-                    html += f"<td>{''.join(cells)}</td>"
-                else:
-                    html += "<td><span class='text-muted'>-</span></td>"
-            html += "</tr>"
-
-        html += """
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-        """
-
-    html += """
-    <footer>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <p class="mb-0 mt-3 small">Data is automatically verified and updated daily from GL.iNet Firmware API.</p>
-            </div>
-        </div>
-    </footer>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        var input = this.value.toLowerCase();
-        var tables = document.querySelectorAll('.firmware-table');
-        
-        tables.forEach(function(table) {
-            var rows = table.querySelectorAll('tbody tr');
-            var visibleRows = 0;
-            
-            rows.forEach(function(row) {
-                var text = row.textContent.toLowerCase();
-                if (text.includes(input)) {
-                    row.style.display = '';
-                    visibleRows++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Hide the entire table section if no rows are visible
-            var card = table.closest('.card');
-            var title = card.previousElementSibling;
-            if (visibleRows === 0) {
-                card.style.display = 'none';
-                if (title && title.classList.contains('section-title')) {
-                    title.style.display = 'none';
-                }
-            } else {
-                card.style.display = '';
-                if (title && title.classList.contains('section-title')) {
-                    title.style.display = '';
-                }
-            }
-        });
-    });
-</script>
-
-</body>
-</html>
-    """
-    return html
+  </div>
+  <div class="legend">
+    <span>{icon("dl")} Version: download</span>
+    <span>{icon("notes")} Changelog</span>
+    <span><span class="tag fresh">new</span> Released in the last {FRESH_DAYS} days</span>
+    <span><span class="tag op">OP24</span> OpenWrt open build</span>{warn_legend}
+    <span>Last update: newest build of any stage</span>
+  </div>
+{recent_html(models, models_metadata, now)}
+{tables}
+  <p class="nomatch" id="nomatch">No device matches your search. Try the model number printed on the label, e.g. MT3000.</p>
+</main>
+"""
+    return (head + header + main + site_footer('') + f'<script>{SEARCH_JS}</script>\n' + '</body>\n</html>\n')
