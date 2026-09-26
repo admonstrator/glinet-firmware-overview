@@ -65,6 +65,10 @@ This project serves as a machine-readable API. You can access version informatio
 **Example:**
 `curl -s https://firmware.gl-i.net/api/ax1800/release/version`
 
+
+### 🖥️ Plain text in the terminal
+
+`curl https://firmware.gl-i.net/` and `curl https://firmware.gl-i.net/mt3000` answer with plain text instead of HTML: Cloudflare rewrites requests from `curl`, `wget`, HTTPie or any client sending `Accept: text/plain` to the text twin of each page (`/index.txt`, `/<model>/index.txt`), which can also be fetched directly. The setup is described in [`cloudflare/README.md`](cloudflare/README.md).
 ---
 
 ## 🔗 Device Pages
