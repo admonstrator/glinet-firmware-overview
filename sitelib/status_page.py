@@ -33,14 +33,14 @@ STATUS_CSS = """
 .problems .none { color: var(--muted); font-size: 13.5px; }
 .problems .stage.release { color: var(--release); } .problems .stage.beta { color: var(--beta); }
 .problems .stage.snapshot { color: var(--snapshot); } .problems .stage.rc { color: var(--rc); } .problems .stage.other { color: var(--other); }
-.problems .stage { font-weight: 600; }
+.problems .stage { font-weight: 600; text-decoration: none; }
+.problems a.stage:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tablenote { color: var(--muted); font-size: 13.5px; margin-top: 10px; }
 .nodata { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
 .nodata li { font: 13.5px var(--code); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; }
 .check .reason { font: 12.5px var(--code); padding: 1px 6px; border-radius: 6px; background: var(--paper); border: 1px solid var(--line); }
 @media (max-width: 960px) {
   .problems td[data-stage="File"] { grid-column: 1 / -1; }
-  footer .cols { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 700px) {
   .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -67,6 +67,12 @@ def _problem_row(d):
     page = device_page_url(d['model'])
     model_cell = f'<a href="{esc(page, quote=True)}">{model_inner}</a>' if page else model_inner
     stage = d['stage']
+    stage_label = esc(stage_title(stage))
+    if page:
+        stage_cell = (f'<a class="stage {stage_class(stage)}" href="{esc(page, quote=True)}#{api_stage_name(stage)}" '
+                      f'title="{stage_label} on the device page">{stage_label}</a>')
+    else:
+        stage_cell = f'<span class="stage {stage_class(stage)}">{stage_label}</span>'
     date = esc((d.get('release_time') or '').split(' ')[0])
     if d.get('link'):
         filename = d['link'].rsplit('/', 1)[-1]
@@ -82,7 +88,7 @@ def _problem_row(d):
         fallback_cell = f'<span class="none">none ({d.get("candidates_probed", 0)} probed)</span>'
     return (f'<tr id="{esc(status_row_id(d["model"], stage), quote=True)}">'
             f'<th scope="row" class="model">{model_cell}</th>'
-            f'<td data-stage="Stage"><span class="stage {stage_class(stage)}">{esc(stage_title(stage))}</span></td>'
+            f'<td data-stage="Stage">{stage_cell}</td>'
             f'<td data-stage="Version"><span class="v">{esc(d.get("version") or "")}</span></td>'
             f'<td data-stage="Released"><time datetime="{date}">{date}</time></td>'
             f'<td data-stage="Reason"><span class="reason">{esc(d.get("reason") or "")}</span></td>'

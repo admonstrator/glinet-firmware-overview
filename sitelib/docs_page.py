@@ -45,7 +45,6 @@ DOCS_CSS = """
   .doc tbody tr { display: block; padding: 10px 14px; }
   .doc tbody th, .doc tbody td { padding: 0; border: 0; }
   .doc tbody th { white-space: normal; word-break: break-all; margin-bottom: 4px; }
-  footer .cols { grid-template-columns: minmax(0, 1fr); }
 }
 """
 
