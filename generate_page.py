@@ -465,6 +465,24 @@ def open_badge_html(entry):
     base = entry.get('_openwrt_base', '24')
     return f'<span class="badge bg-secondary ms-1" style="font-size:0.6rem;vertical-align:middle;" title="OpenWrt {base} open variant">OP{base}</span>'
 
+def group_models_by_type(models, models_metadata):
+    """Model codes grouped by device type (ROUTER/IOT/KVM), sorted by display name."""
+    grouped = {'ROUTER': [], 'IOT': [], 'KVM': []}
+    for code in models:
+        m_type = models_metadata.get(code, {}).get('type', 'ROUTER')
+        grouped.setdefault(m_type, []).append(code)
+    for codes in grouped.values():
+        codes.sort(key=lambda c: models_metadata.get(c, {}).get('name', c))
+    return grouped
+
+def overview_stage_columns(models):
+    """Stage columns of the overview: known stages first, the rest alphabetically,
+    OpenWrt open variants excluded (they are shown inside the BETA column)."""
+    all_stages = set()
+    for stages in models.values():
+        all_stages.update(s for s in stages if not s.startswith('BETA_OPEN'))
+    return [s for s in STAGE_ORDER if s in all_stages] + [s for s in sorted(all_stages) if s not in STAGE_ORDER]
+
 def device_page_url(code):
     """Site-relative URL of a model's device page ('mt3000/'), or None if the
     model code would collide with a reserved root directory."""
@@ -522,30 +540,8 @@ def html_head(title, description='', canonical='', root=''):
 
 def generate_html(models, models_metadata, diagnostics, generated_at=None):
     generated_at = generated_at or datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-    # Group models by type
-    grouped_models = {'ROUTER': [], 'IOT': [], 'KVM': []}
-    for code in models.keys():
-        meta = models_metadata.get(code, {})
-        m_type = meta.get('type', 'ROUTER')
-        if m_type not in grouped_models:
-            grouped_models[m_type] = []
-        grouped_models[m_type].append(code)
-
-    # Sort within each group
-    def get_sort_key(code):
-        meta = models_metadata.get(code, {})
-        return meta.get('name', code)
-
-    for m_type in grouped_models:
-        grouped_models[m_type].sort(key=get_sort_key)
-    
-    # Collect all unique stages to create table headers, exclude internal BETA_OPEN* variants
-    all_stages = set()
-    for model in models:
-        all_stages.update(s for s in models[model].keys() if not s.startswith('BETA_OPEN'))
-    
-    # Define a preferred order for columns
-    sorted_stages = [s for s in STAGE_ORDER if s in all_stages] + [s for s in sorted(all_stages) if s not in STAGE_ORDER]
+    grouped_models = group_models_by_type(models, models_metadata)
+    sorted_stages = overview_stage_columns(models)
 
     issue_count = sum(1 for d in diagnostics if d['status'] != 'ok')
     if issue_count:
@@ -985,6 +981,135 @@ def generate_device_pages(models, models_metadata, generated_at):
         written += 1
     return written
 
+# ---------------------------------------------------------------------------
+# Plain-text twins (index.txt) for curl, wget & co.
+# Cloudflare rewrites requests from those clients to these files, see cloudflare/README.md
+# ---------------------------------------------------------------------------
+
+def text_table(rows, headers=None):
+    """Align rows (lists of strings) into columns separated by two spaces."""
+    rows = [list(r) for r in rows]
+    all_rows = ([list(headers)] if headers else []) + rows
+    widths = [max(len(r[i]) for r in all_rows) for i in range(len(all_rows[0]))]
+    return '\n'.join('  '.join(c.ljust(w) for c, w in zip(r, widths)).rstrip() for r in all_rows)
+
+def text_version(entry):
+    """Version for text output; a trailing '!' marks a download that did not respond."""
+    version = entry.get('version', 'N/A')
+    return version if entry.get('_link_ok', True) else version + '!'
+
+def generate_text_index(models, models_metadata, generated_at):
+    """Plain-text twin of the overview, served to curl as / (see cloudflare/README.md)."""
+    grouped = group_models_by_type(models, models_metadata)
+    columns = overview_stage_columns(models)
+    lines = [
+        SITE_NAME,
+        '=' * len(SITE_NAME),
+        'Latest verified firmware versions for GL.iNet routers, IoT and KVM devices.',
+        f'Last updated: {generated_at}',
+        f'Web: {SITE_URL}/',
+        '',
+    ]
+    flagged = False
+    has_open = False
+    for m_type in ['ROUTER', 'IOT', 'KVM']:
+        codes = grouped.get(m_type, [])
+        if not codes:
+            continue
+        rows = []
+        for code in codes:
+            cells = []
+            for stage in columns:
+                info = models[code].get(stage)
+                parts = [text_version(info)] if info else []
+                if stage == 'BETA':
+                    for s in sorted(k for k in models[code] if k.startswith('BETA_OPEN')):
+                        parts.append(f"op{models[code][s].get('_openwrt_base', '24')}:{text_version(models[code][s])}")
+                        has_open = True
+                flagged = flagged or any(p.endswith('!') for p in parts)
+                cells.append(' '.join(parts) if parts else '-')
+            rows.append([code.lower(), models_metadata.get(code, {}).get('name', code)] + cells)
+        lines.append(f"{TYPE_NAMES.get(m_type, m_type)} ({len(codes)})")
+        lines.append(text_table(rows, ['MODEL', 'NAME'] + columns))
+        lines.append('')
+    notes = []
+    if has_open:
+        notes.append('opNN:x.y.z  OpenWrt NN open build (beta channel)')
+    if flagged:
+        notes.append(f'x.y.z!      download link did not respond in the last build, see {SITE_URL}/api/status.json')
+    if notes:
+        lines += notes + ['']
+    lines.append('Usage:')
+    lines.append(text_table([
+        [f'  curl {SITE_URL}/<model>', f'details of one model, e.g. {SITE_URL}/mt3000'],
+        [f'  curl {SITE_URL}/api/<model>/branches', 'available stages'],
+        [f'  curl {SITE_URL}/api/<model>/<stage>/version', 'version only (also: url, date, hash, changelog)'],
+        [f'  curl {SITE_URL}/api/all.json', 'everything as JSON'],
+    ]))
+    lines.append('')
+    return '\n'.join(lines)
+
+def generate_device_text(code, stages, meta, generated_at):
+    """Plain-text twin of a device page, served to curl as /<model>."""
+    code_lower = code.lower()
+    m_type = meta.get('type', 'ROUTER')
+    title = f"{meta.get('name', code)} ({code}) - {TYPE_NAMES.get(m_type, m_type)}"
+    lines = [title, '=' * len(title), f'Last updated: {generated_at}', f'Web: {SITE_URL}/{device_page_url(code)}', '']
+    ordered = ordered_stages(stages)
+    if not ordered:
+        lines += ['No verified firmware download is currently available for this model.', '']
+    else:
+        has_md5 = any(((s.get('download') or [{}])[0].get('md5') or '') for s in stages.values())
+        headers = ['STAGE', 'VERSION', 'RELEASED', 'DOWNLOAD'] + (['MD5'] if has_md5 else [])
+        rows, problems = [], []
+        for stage in ordered:
+            info = stages[stage]
+            row = [api_stage_name(stage), text_version(info), info.get('release_time', '') or '-', entry_link(info) or '-']
+            if has_md5:
+                row.append((info.get('download') or [{}])[0].get('md5', '') or '-')
+            rows.append(row)
+            if not info.get('_link_ok', True):
+                problem = f"  {api_stage_name(stage)} {info.get('version', 'N/A')}: {info.get('_link_reason', 'unknown')}"
+                if info.get('_fallback_link'):
+                    problem += f" - newest reachable build: {info.get('_fallback_version', 'N/A')} {info['_fallback_link']}"
+                problems.append(problem)
+        lines.append(text_table(rows, headers))
+        notes = []
+        if any(s.startswith('BETA_OPEN') for s in ordered):
+            notes.append('beta-openNN  OpenWrt NN open build')
+        if problems:
+            notes.append(f'x.y.z!       download link did not respond in the last build; the version stays listed, see {SITE_URL}/status.html')
+            notes += problems
+        if notes:
+            lines += [''] + notes
+        lines.append('')
+    first = api_stage_name(ordered[0]) if ordered else 'release'
+    lines.append('Usage:')
+    lines.append(text_table([
+        [f'  curl {SITE_URL}/api/{code_lower}/{first}/changelog', 'changelog as text'],
+        [f'  curl {SITE_URL}/api/{code_lower}/branches', 'available stages'],
+        [f'  curl {SITE_URL}/api/{code_lower}/<stage>/version', 'version only (also: url, date, hash, changelog)'],
+        [f'  curl {SITE_URL}/', 'overview of all models'],
+    ]))
+    lines.append('')
+    return '\n'.join(lines)
+
+def generate_text_pages(models, models_metadata, generated_at):
+    """Write index.txt next to the overview and next to every device page.
+    Returns the number of device text files written."""
+    with open('index.txt', 'w', encoding='utf-8') as f:
+        f.write(generate_text_index(models, models_metadata, generated_at))
+    written = 0
+    for code, stages in models.items():
+        if device_page_url(code) is None:
+            continue
+        page_dir = code.lower()
+        os.makedirs(page_dir, exist_ok=True)
+        with open(os.path.join(page_dir, 'index.txt'), 'w', encoding='utf-8') as f:
+            f.write(generate_device_text(code, stages, models_metadata.get(code, {}), generated_at))
+        written += 1
+    return written
+
 STATUS_PAGE_HEAD = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1343,6 +1468,9 @@ def main():
         print(f"Generating device pages for {len(models)} models...")
         pages_written = generate_device_pages(models, models_metadata, generated_at)
 
+        print("Generating plain-text pages for curl...")
+        generate_text_pages(models, models_metadata, generated_at)
+
         print(f"Generating HTML for {len(models)} models...")
         with open('index.html', 'w', encoding='utf-8') as f:
             f.write(generate_html(models, models_metadata, diagnostics, generated_at))
@@ -1352,7 +1480,7 @@ def main():
             f.write(generate_status_html(diagnostics, empty_models))
 
         write_step_summary(diagnostics, empty_models)
-        print(f"Done. index.html, status.html, api/ files and {pages_written} device pages created.")
+        print(f"Done. index.html, status.html, api/ files and {pages_written} device pages (HTML + text) created.")
     else:
         message = "Failed to fetch or process data: the API returned no firmware entries at all."
         print(message)
