@@ -23,7 +23,7 @@ if REPO not in sys.path:
 def load_fixture():
     with open(os.path.join(FIXTURES, 'metadata.json'), encoding='utf-8') as f:
         metadata = json.load(f)
-    with open(os.path.join(FIXTURES, 'models.json'), encoding='utf-8') as f:
+    with open(os.path.join(FIXTURES, 'site_data.json'), encoding='utf-8') as f:
         models = json.load(f)
     with open(os.path.join(FIXTURES, 'run.json'), encoding='utf-8') as f:
         run = json.load(f)
