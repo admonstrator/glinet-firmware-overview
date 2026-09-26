@@ -8,7 +8,7 @@
 
 [![Stars](https://img.shields.io/github/stars/admonstrator/glinet-firmware-overview?style=for-the-badge)](https://github.com/admonstrator/glinet-firmware-overview/stargazers)
 [![License](https://img.shields.io/github/license/admonstrator/glinet-firmware-overview?style=for-the-badge)](LICENSE)
-[![Dashboard](https://img.shields.io/badge/Live-Dashboard-blue?style=for-the-badge&logo=google-chrome)](https://admonstrator.github.io/glinet-firmware-overview/)
+[![Dashboard](https://img.shields.io/badge/Live-Dashboard-blue?style=for-the-badge&logo=google-chrome)](https://firmware.gl-i.net/)
 
 ---
 
@@ -37,7 +37,7 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 
 - 🚀 **Automated Tracking** – Daily updates for all GL.iNet models (Routers, IoT, KVM)
 - 🔍 **Link Validation** – Every download link is verified with a `HEAD` request, retried on temporary failures. An unreachable link never changes which version is listed; it is flagged instead, and the newest older build that still downloads is offered as a second link
-- 🩺 **Status Page** – [`/status.html`](https://glinet-firmware.admon.me/status.html) lists every download that could not be reached, with the reason, the number of attempts and the latest reachable build
+- 🩺 **Status Page** – [`/status.html`](https://firmware.gl-i.net/status.html) lists every download that could not be reached, with the reason, the number of attempts and the latest reachable build
 - 📁 **Flat-File API** – Simple, machine-readable directory structure for easy integration
 - 📊 **Categorized Dashboard** – Clean UI grouped by device type with search functionality
 - 🔗 **Device Deep Links** – Every model has its own page at `/<model>/` that can be linked directly
@@ -63,7 +63,7 @@ This project serves as a machine-readable API. You can access version informatio
 `/api/all.json` includes `changelog` as path reference (e.g. `/api/ax1800/release/changelog`) instead of inline changelog content. Each entry also carries `link_ok`, which is `false` when the download link did not respond during the last build; the per-stage summary at `/api/<model>/<stage>/` shows the same as a `link:` line. When a link is down and an older build still downloads, the entry gains `latest_reachable` (`version`, `release_time`, `download`) and the summary a matching `latest_reachable:` line. The reported `version` is always the newest one GL.iNet publishes, whether or not its download responds.
 
 **Example:**
-`curl -s https://glinet-firmware.admon.me/api/ax1800/release/version`
+`curl -s https://firmware.gl-i.net/api/ax1800/release/version`
 
 ---
 
@@ -71,9 +71,9 @@ This project serves as a machine-readable API. You can access version informatio
 
 Every tracked model has its own small page that can be linked directly, e.g. in forum posts:
 
-`https://glinet-firmware.admon.me/<model>/`
+`https://firmware.gl-i.net/<model>/`
 
-**Example:** [https://glinet-firmware.admon.me/mt3000/](https://glinet-firmware.admon.me/mt3000/)
+**Example:** [https://firmware.gl-i.net/mt3000/](https://firmware.gl-i.net/mt3000/)
 
 Each page lists all verified firmware stages of the model with version, release date, download link and changelog, plus the API endpoints for that model. The model names in the dashboard link to these pages as well.
 
