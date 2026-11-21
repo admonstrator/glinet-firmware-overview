@@ -41,9 +41,10 @@ def _moment(value):
         return None
 
 
-def parse_notices(data, now=None):
+def parse_notices(data, now=None, keep_expired=False):
     """The notices of a notices.json document that are valid and not expired.
-    Unknown levels, missing text, non-https links and passed `until` dates are dropped."""
+    Unknown levels, missing text, non-https links and passed `until` dates are dropped
+    (the last ones kept with keep_expired, to see what a built page still shows)."""
     now = now or datetime.now(timezone.utc)
     items = data.get('notices') if isinstance(data, dict) else None
     out = []
@@ -54,7 +55,7 @@ def parse_notices(data, now=None):
         if level not in LEVELS or not text or not url.startswith('https://'):
             continue
         until = str(n.get('until') or '')
-        if until and (_moment(until) or now) < now:
+        if until and not keep_expired and (_moment(until) or now) < now:
             continue
         out.append({
             'kind': 'advisory' if n.get('kind') == 'advisory' else 'notice',

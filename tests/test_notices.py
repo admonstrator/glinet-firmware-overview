@@ -171,10 +171,14 @@ class CheckTests(unittest.TestCase):
         self.assertTrue(check_notices.changed(doc(), self.live, NOW))
 
     def test_expired_notice_on_the_site_counts_as_change(self):
+        # The pages still show a notice whose time is up: rebuild, also when gl-i.net still lists it
         live = {'notices': [dict(ADVISORY, until='2026-11-20')]}
-        self.assertFalse(check_notices.changed(doc(), live, NOW))  # already hidden on parse: nothing to do
+        self.assertTrue(check_notices.changed(doc(), live, NOW))
+        self.assertTrue(check_notices.changed(doc(dict(ADVISORY, until='2026-11-20')), live, NOW))
         live = {'notices': [dict(ADVISORY, until='2026-11-21T13:00Z')]}
         self.assertTrue(check_notices.changed(doc(), live, NOW))
+        # Same notice with the same future end on both sides: nothing to do
+        self.assertFalse(check_notices.changed(doc(dict(ADVISORY, until='2026-11-21T13:00Z')), live, NOW))
 
     def test_unreadable_sources(self):
         self.assertFalse(check_notices.changed(None, self.live, NOW))  # gl-i.net down: never start a build

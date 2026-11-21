@@ -5,8 +5,9 @@
 Run every 30 minutes by .github/workflows/notices_watch.yml. Compares the
 notices gl-i.net publishes now (https://gl-i.net/notices.json) with the ones
 this site currently shows (/api/notices.json, written by the last build), both
-read through sitelib.notices.parse_notices, so an expired notice counts as a
-change and a whitespace difference does not.
+read through sitelib.notices.parse_notices, so a whitespace difference does not
+count. A notice whose time is up is dropped from gl-i.net's side but kept on
+this site's side: the pages still show it, so that is a change too.
 
 Prints the result and writes `changed=true|false` to $GITHUB_OUTPUT. When
 gl-i.net cannot be read the answer is false: an outage there must not start a
@@ -47,7 +48,7 @@ def changed(source, live, now=None):
         return False
     if live is None:
         return True
-    return fingerprint(parse_notices(source, now)) != fingerprint(parse_notices(live, now))
+    return fingerprint(parse_notices(source, now)) != fingerprint(parse_notices(live, now, keep_expired=True))
 
 
 def main():
