@@ -1,0 +1,47 @@
+name: Check gl-i.net notices
+
+# Every 30 minutes: when gl-i.net has published, changed or removed a security
+# advisory or notice since the last build, start "Update and Deploy Firmware
+# Overview" so the banner on this site follows within half an hour instead of
+# waiting for the daily run. The check itself takes a few seconds.
+
+on:
+  schedule:
+    - cron: '7,37 * * * *' # every 30 minutes, off the full hour when Actions is busiest
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write # start the build workflow
+
+concurrency:
+  group: notices-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compare notices
+        id: compare
+        run: python3 check_notices.py
+
+      - name: Start the build
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A build that is already queued or running picks up the new notices itself;
+          # starting another one would cancel it (concurrency group "pages").
+          busy=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow daily_update.yml --limit 10 \
+                   --json status --jq '[.[] | select(.status != "completed")] | length')
+          if [ "$busy" -gt 0 ]; then
+            echo "A build is already queued or running."
+            exit 0
+          fi
+          gh workflow run daily_update.yml --repo "$GITHUB_REPOSITORY" --ref main
+          echo "::notice::Notices changed on gl-i.net, build started."

@@ -45,7 +45,7 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 - 🆕 **Recently Released** – Builds from the last 14 days at the top of the dashboard and as text at `/new`
 - 🕰️ **Last Update per Device** – How long ago each device got its newest build
 - 📰 **Atom Feeds** – [`/feed.xml`](https://firmware.gl-i.net/feed.xml) for all devices, `/<model>/feed.xml` for one device
-- 🛡️ **Security Notices** – Open security advisories and notices from [gl-i.net](https://gl-i.net/security/) appear as a bar on every page, at the top of every text page and when the terminal menu starts
+- 🛡️ **Security Notices** – Open security advisories and notices from [gl-i.net](https://gl-i.net/security/) appear as a bar on every page, at the top of every text page and when the terminal menu starts. A small job checks gl-i.net every 30 minutes and rebuilds the site when they change
 - 📖 **API & Terminal Docs** – [`/docs/`](https://firmware.gl-i.net/docs/) explains the menu, the text pages, the flat-file API and the feeds
 
 ---

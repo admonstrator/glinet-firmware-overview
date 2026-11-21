@@ -12,6 +12,7 @@ puts the notices
 
 cli.sh reads https://gl-i.net/notices.tsv itself first, so the terminal menu is
 current even between two builds of this site; api/notices is its fallback.
+check_notices.py (every 30 minutes) starts a build when gl-i.net's notices change.
 """
 import html as html_lib
 import json
@@ -19,6 +20,8 @@ import os
 import textwrap
 import urllib.request
 from datetime import datetime, timedelta, timezone
+
+from sitelib.core import SITE_URL
 
 NOTICES_URL = 'https://gl-i.net/notices.json'
 NOTICES_TIMEOUT = 10
@@ -66,15 +69,24 @@ def parse_notices(data, now=None):
     return out
 
 
-def fetch_notices(url=NOTICES_URL, timeout=NOTICES_TIMEOUT):
-    """Download and parse notices.json. Any failure means no notices, never a failed build."""
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'glinet-firmware-overview'})
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            return parse_notices(json.loads(response.read().decode('utf-8')))
-    except Exception as e:  # network, HTTP or JSON error
-        print(f"  WARNING notices from {url} not loaded: {type(e).__name__}: {e}")
-        return []
+def _load_json(url, timeout):
+    req = urllib.request.Request(url, headers={'User-Agent': 'glinet-firmware-overview'})
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return json.loads(response.read().decode('utf-8'))
+
+
+def fetch_notices(url=NOTICES_URL, fallback=f'{SITE_URL}/api/notices.json', timeout=NOTICES_TIMEOUT):
+    """Download and parse notices.json. When gl-i.net cannot be read, the notices this
+    site showed so far (`fallback`, its own api/notices.json) stay, so an outage there
+    does not drop a banner. Never fails the build: without either source there are none."""
+    for source in (url, fallback):
+        if not source:
+            continue
+        try:
+            return parse_notices(_load_json(source, timeout))
+        except Exception as e:  # network, HTTP or JSON error
+            print(f"  WARNING notices from {source} not loaded: {type(e).__name__}: {e}")
+    return []
 
 
 def set_notices(notices):

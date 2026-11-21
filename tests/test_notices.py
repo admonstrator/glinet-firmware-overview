@@ -1,4 +1,7 @@
 """Notices from gl-i.net: parsing, banner, text block, API files and an offline build with a notice."""
+import contextlib
+import io
+import json
 import os
 import subprocess
 import sys
@@ -12,6 +15,7 @@ sys.path.insert(0, REPO)
 sys.path.insert(0, HERE)
 
 import build_offline  # noqa: E402
+import check_notices  # noqa: E402
 import check_site  # noqa: E402
 from sitelib import notices  # noqa: E402
 
@@ -137,6 +141,44 @@ class SiteWithNoticeTests(unittest.TestCase):
 
     def test_site_is_consistent(self):
         self.assertEqual(check_site.check(self.out, no_external_assets=True), [])
+
+
+class FetchTests(unittest.TestCase):
+    def test_falls_back_to_the_notices_shown_so_far(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            shown = os.path.join(tmp, 'notices.json')
+            with open(shown, 'w', encoding='utf-8') as f:
+                json.dump({'source': notices.NOTICES_URL, 'notices': [ADVISORY]}, f)
+            missing = 'file://' + os.path.join(tmp, 'missing.json')
+            with contextlib.redirect_stdout(io.StringIO()):
+                kept = notices.fetch_notices(missing, 'file://' + shown)
+                none = notices.fetch_notices(missing, missing)
+            self.assertEqual([n['id'] for n in kept], ['CSA-2026-01'])
+            self.assertEqual(none, [])
+
+
+class CheckTests(unittest.TestCase):
+    """check_notices.changed decides whether the 30-minute job starts a build."""
+    live = {'source': notices.NOTICES_URL, 'notices': notices.parse_notices(doc(ADVISORY), NOW)}
+
+    def test_same_notices(self):
+        self.assertFalse(check_notices.changed(doc(ADVISORY), self.live, NOW))
+        self.assertFalse(check_notices.changed(doc(dict(ADVISORY, text=ADVISORY['text'].replace(' ', '  '))), self.live, NOW))
+
+    def test_new_changed_or_removed(self):
+        self.assertTrue(check_notices.changed(doc(ADVISORY, dict(ADVISORY, id='CSA-2026-02')), self.live, NOW))
+        self.assertTrue(check_notices.changed(doc(dict(ADVISORY, updated='2026-11-22')), self.live, NOW))
+        self.assertTrue(check_notices.changed(doc(), self.live, NOW))
+
+    def test_expired_notice_on_the_site_counts_as_change(self):
+        live = {'notices': [dict(ADVISORY, until='2026-11-20')]}
+        self.assertFalse(check_notices.changed(doc(), live, NOW))  # already hidden on parse: nothing to do
+        live = {'notices': [dict(ADVISORY, until='2026-11-21T13:00Z')]}
+        self.assertTrue(check_notices.changed(doc(), live, NOW))
+
+    def test_unreadable_sources(self):
+        self.assertFalse(check_notices.changed(None, self.live, NOW))  # gl-i.net down: never start a build
+        self.assertTrue(check_notices.changed(doc(ADVISORY), None, NOW))  # no mirror yet
 
 
 class CliTests(unittest.TestCase):
