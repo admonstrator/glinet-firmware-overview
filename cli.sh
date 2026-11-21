@@ -8,9 +8,13 @@
 # Needs only a POSIX shell with awk, sed and cut (BusyBox is enough) plus one of
 # curl, wget or uclient-fetch. Menu input is read from /dev/tty, so the script
 # also works when piped into sh. Data comes from the flat-file API: __SITE_URL__/api/
+# Security advisories and notices come from gl-i.net (__SITE_URL__/api/notices
+# when gl-i.net cannot be reached) and are shown at the start.
 
 SITE="__SITE_URL__"
+NOTICES_URL="https://gl-i.net/notices.tsv"
 UA="glinet-firmware-cli"
+TAB=$(printf '\t')
 TTY=/dev/tty
 [ -r "$TTY" ] || TTY=/dev/stdin
 
@@ -20,12 +24,15 @@ trap 'exit 130' INT TERM
 
 if command -v curl >/dev/null 2>&1; then
     fetch() { curl -fsSL -A "$UA" "$SITE/$1"; }
+    fetch_url() { curl -fsSL -m 6 -A "$UA" "$1"; }
     download() { curl -fL --progress-bar -A "$UA" -o "$2" "$1"; }
 elif command -v wget >/dev/null 2>&1; then
     fetch() { wget -q -O - -U "$UA" "$SITE/$1"; }
+    fetch_url() { wget -q -T 6 -O - -U "$UA" "$1"; }
     download() { wget -O "$2" -U "$UA" "$1"; }
 elif command -v uclient-fetch >/dev/null 2>&1; then
     fetch() { uclient-fetch -q -O - -U "$UA" "$SITE/$1"; }
+    fetch_url() { uclient-fetch -q -T 6 -O - -U "$UA" "$1"; }
     download() { uclient-fetch -O "$2" -U "$UA" "$1"; }
 else
     echo "This menu needs curl, wget or uclient-fetch." >&2
@@ -41,8 +48,9 @@ fi
 # ANSI colours only on a terminal; tput is not available on BusyBox
 if [ -t 1 ] && [ "${TERM:-dumb}" != dumb ]; then
     B=$(printf '\033[1m'); D=$(printf '\033[2m'); G=$(printf '\033[32m'); Y=$(printf '\033[33m'); C=$(printf '\033[36m'); R=$(printf '\033[0m')
+    E=$(printf '\033[1;31m')
 else
-    B=; D=; G=; Y=; C=; R=
+    B=; D=; G=; Y=; C=; R=; E=
 fi
 
 field() { printf '%s\n' "$row" | cut -f"$1"; }
@@ -61,6 +69,37 @@ header() {
 
 fetch api/models >"$TMP/models" 2>/dev/null || { echo "Could not reach $SITE/api/models" >&2; exit 1; }
 MODEL_COUNT=$(wc -l <"$TMP/models" | tr -d ' ')
+
+# --- notices from gl-i.net ---------------------------------------------------
+
+# level, id, updated, url, text (tab-separated). Lines with an unknown level are
+# dropped, so a captive portal page or an error page never shows up as a notice.
+{ fetch_url "$NOTICES_URL" || fetch api/notices; } 2>/dev/null |
+    awk -F'\t' 'NF >= 5 && $1 ~ /^(critical|warning|info|resolved)$/' >"$TMP/notices" || :
+NOTICE_COUNT=$(wc -l <"$TMP/notices" | tr -d ' ')
+
+show_notices() {
+    [ -s "$TMP/notices" ] || return 0
+    while IFS="$TAB" read -r level id updated url text; do
+        case $level in
+            critical) col=$E; label="SECURITY ADVISORY" ;;
+            warning)  col=$Y; label="SECURITY ADVISORY" ;;
+            resolved) col=$G; label="RESOLVED" ;;
+            *)        col=$C; label="NOTICE" ;;
+        esac
+        printf '\n  %s!! %s%s  %s%s%s\n' "$col" "$label" "$R" "$D" "$id" "$R"
+        printf '%s\n' "$text" | awk -v w=72 '{   # word wrap; BusyBox on OpenWrt may lack fold
+            n = split($0, word, " "); line = ""
+            for (i = 1; i <= n; i++) {
+                if (line != "" && length(line) + 1 + length(word[i]) > w) { print "     " line; line = word[i] }
+                else line = (line == "") ? word[i] : line " " word[i]
+            }
+            if (line != "") print "     " line }'
+        printf '     %s%s%s\n' "$C" "$url" "$R"
+    done <"$TMP/notices"
+}
+
+show_notices
 
 count_type() { awk -F'\t' -v t="$1" '$2 == t' "$TMP/models" | wc -l | tr -d ' '; }
 
@@ -183,6 +222,7 @@ while :; do
     printf '  %s2%s  IoT devices  %s\n' "$B" "$R" "$(count_type IOT)"
     printf '  %s3%s  KVM / Comet  %s\n' "$B" "$R" "$(count_type KVM)"
     printf '  %s4%s  Recently released\n' "$B" "$R"
+    [ "$NOTICE_COUNT" -gt 0 ] && printf '  %sn%s  %sSecurity notices from gl-i.net (%s)%s\n' "$B" "$R" "$E" "$NOTICE_COUNT" "$R"
     printf '\n  Or type a model code or a search term (e.g. %smt3000%s, %sflint%s).   %sq%s quit\n' "$C" "$R" "$C" "$R" "$B" "$R"
     ask "> "
     case $REPLY in
@@ -190,6 +230,7 @@ while :; do
         2) model_list IOT "IoT devices" ;;
         3) model_list KVM "KVM / Comet" ;;
         4) recent ;;
+        n|N) show_notices ;;
         q|Q) exit 0 ;;
         "") ;;
         *)  q=$(printf '%s' "$REPLY" | tr 'A-Z' 'a-z')

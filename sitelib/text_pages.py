@@ -8,6 +8,7 @@ import html as html_lib
 import os
 
 from sitelib.core import *  # noqa: F401,F403
+from sitelib.notices import with_notices
 
 # The interactive menu script lives next to generate_page.py in the repository root.
 CLI_SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cli.sh')
@@ -259,26 +260,26 @@ def generate_text_pages(models, models_metadata, generated_at):
     """Write the text menu tree next to the HTML pages. Returns the number of
     device text files written."""
     with open('index.txt', 'w', encoding='utf-8') as f:
-        f.write(generate_text_index(models, models_metadata, generated_at))
+        f.write(with_notices(generate_text_index(models, models_metadata, generated_at)))
 
     grouped = group_models_by_type(models, models_metadata)
     for m_type, slug in TYPE_SLUGS.items():
         os.makedirs(slug, exist_ok=True)
         with open(os.path.join(slug, 'index.txt'), 'w', encoding='utf-8') as f:
-            f.write(generate_text_group(m_type, grouped.get(m_type, []), models, models_metadata, generated_at))
+            f.write(with_notices(generate_text_group(m_type, grouped.get(m_type, []), models, models_metadata, generated_at)))
         with open(os.path.join(slug, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(redirect_stub_html(f'../#{m_type.lower()}', TYPE_NAMES.get(m_type, m_type)))
 
     # /new: recently released builds; browsers go to the "Recently released" section of the overview
     os.makedirs(NEW_DIR, exist_ok=True)
     with open(os.path.join(NEW_DIR, 'index.txt'), 'w', encoding='utf-8') as f:
-        f.write(generate_text_new(models, models_metadata, generated_at))
+        f.write(with_notices(generate_text_new(models, models_metadata, generated_at)))
     with open(os.path.join(NEW_DIR, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(redirect_stub_html('../#recent', 'Recently released'))
 
     os.makedirs('all', exist_ok=True)
     with open(os.path.join('all', 'index.txt'), 'w', encoding='utf-8') as f:
-        f.write(generate_text_all(models, models_metadata, generated_at))
+        f.write(with_notices(generate_text_all(models, models_metadata, generated_at)))
     with open(os.path.join('all', 'index.html'), 'w', encoding='utf-8') as f:
         f.write(redirect_stub_html('../', SITE_NAME))
 
@@ -300,13 +301,13 @@ def generate_text_pages(models, models_metadata, generated_at):
         meta = models_metadata.get(code, {})
         os.makedirs(page_dir, exist_ok=True)
         with open(os.path.join(page_dir, 'index.txt'), 'w', encoding='utf-8') as f:
-            f.write(generate_device_text(code, stages, meta, generated_at))
+            f.write(with_notices(generate_device_text(code, stages, meta, generated_at)))
         for stage, info in stages.items():
             s_api = api_stage_name(stage)
             stage_dir = os.path.join(page_dir, s_api)
             os.makedirs(stage_dir, exist_ok=True)
             with open(os.path.join(stage_dir, 'index.txt'), 'w', encoding='utf-8') as f:
-                f.write(generate_stage_text(code, stage, info, meta, generated_at))
+                f.write(with_notices(generate_stage_text(code, stage, info, meta, generated_at)))
             with open(os.path.join(stage_dir, 'index.html'), 'w', encoding='utf-8') as f:
                 f.write(redirect_stub_html(f'../#{s_api}', f"{meta.get('name', code)} {s_api}"))
         written += 1

@@ -17,6 +17,7 @@ from sitelib.text_pages import generate_text_pages
 from sitelib.docs_page import generate_docs_pages
 from sitelib.feeds import generate_feeds
 from sitelib.status_page import generate_status_html
+from sitelib.notices import fetch_notices, set_notices, write_notices_api
 
 API_URL = "https://firmware-api.gl-inet.com/cloud-api/model/info"
 
@@ -522,11 +523,15 @@ def generate_api_files(models, models_metadata, diagnostics, empty_models, gener
     with open(os.path.join(api_dir, 'status.json'), 'w', encoding='utf-8') as f:
         json.dump(status_data, f, indent=2, ensure_ascii=False)
 
-def write_site(models, models_metadata, diagnostics, empty_models, generated_at):
+def write_site(models, models_metadata, diagnostics, empty_models, generated_at, notices=()):
     """Write the whole site into the current directory. No network access happens here,
-    so tests/build_offline.py can call it with fixture data. Returns the number of device pages."""
+    so tests/build_offline.py can call it with fixture data. `notices` come from
+    sitelib.notices.fetch_notices (gl-i.net) and appear on every page.
+    Returns the number of device pages."""
+    set_notices(notices)
     print("Generating API files...")
     generate_api_files(models, models_metadata, diagnostics, empty_models, generated_at)
+    write_notices_api()
 
     print(f"Generating device pages for {len(models)} models...")
     pages_written = generate_device_pages(models, models_metadata, generated_at)
@@ -570,7 +575,11 @@ def main():
         models, diagnostics = process_data(raw_data, models_metadata)
         generated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
 
-        pages_written = write_site(models, models_metadata, diagnostics, empty_models, generated_at)
+        print("Loading notices from gl-i.net...")
+        notices = fetch_notices()
+        print(f"  {len(notices)} notice(s)")
+
+        pages_written = write_site(models, models_metadata, diagnostics, empty_models, generated_at, notices)
         write_step_summary(diagnostics, empty_models)
         print(f"Done. index.html, status.html, api/ files and {pages_written} device pages (HTML + text) created.")
     else:

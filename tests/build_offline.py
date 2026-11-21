@@ -30,8 +30,9 @@ def load_fixture():
     return models, metadata, run['diagnostics'], run['empty_models'], run['generated_at']
 
 
-def build(out_dir, quiet=True):
-    """Render the fixture site into out_dir (created or emptied). Returns out_dir."""
+def build(out_dir, quiet=True, notices=()):
+    """Render the fixture site into out_dir (created or emptied). Returns out_dir.
+    `notices` are parsed notices (sitelib.notices.parse_notices) for the banner."""
     import generate_page
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
@@ -44,7 +45,7 @@ def build(out_dir, quiet=True):
     try:
         sink = io.StringIO() if quiet else sys.stdout
         with contextlib.redirect_stdout(sink):
-            generate_page.write_site(models, metadata, diagnostics, empty_models, generated_at)
+            generate_page.write_site(models, metadata, diagnostics, empty_models, generated_at, notices)
     finally:
         os.chdir(cwd)
     return out_dir

@@ -45,6 +45,7 @@ Created by [Admon](https://forum.gl-inet.com/u/admon/) for the GL.iNet community
 - 🆕 **Recently Released** – Builds from the last 14 days at the top of the dashboard and as text at `/new`
 - 🕰️ **Last Update per Device** – How long ago each device got its newest build
 - 📰 **Atom Feeds** – [`/feed.xml`](https://firmware.gl-i.net/feed.xml) for all devices, `/<model>/feed.xml` for one device
+- 🛡️ **Security Notices** – Open security advisories and notices from [gl-i.net](https://gl-i.net/security/) appear as a bar on every page, at the top of every text page and when the terminal menu starts
 - 📖 **API & Terminal Docs** – [`/docs/`](https://firmware.gl-i.net/docs/) explains the menu, the text pages, the flat-file API and the feeds
 
 ---
@@ -57,6 +58,7 @@ This project serves as a machine-readable API. You can access version informatio
 |----------|-------------|
 | `/api/all.json` | Consolidated JSON of all tracked models and versions |
 | `/api/status.json` | Build report: unreachable downloads with reason and attempt count, models the API returned no data for |
+| `/api/notices` | Security advisories and notices from [gl-i.net](https://gl-i.net/security/), tab-separated: level, id, updated, URL, text (also `/api/notices.json`) |
 | `/api/<model>/branches` | Text file listing available firmware stages for a model |
 | `/api/models` | Tab-separated: model code, type, name, release version |
 | `/api/<model>/stages` | Tab-separated: stage, version, date, download URL, MD5, link state, fallback version, fallback URL |

@@ -142,6 +142,7 @@ def api_samples(models, models_metadata, code, api_dir='api'):
         'all.json': '{"%s": {"release": %s, ...}, ...}' % (lower, json.dumps(all_json, ensure_ascii=False)),
         'status.json': ('{"generated_at": "...", "summary": {"entries": ..., "head_requests": ..., "unreachable": ..., '
                         '"models_without_api_data": ...}, "unreachable": [...], ...}'),
+        'notices': 'critical\tCSA-2026-01\t2026-11-21\thttps://gl-i.net/security/csa-2026-01/\tAn attacker used ...',
     }
 
 
@@ -161,6 +162,8 @@ def api_endpoints(samples):
         ('/api/all.json', 'Everything as one JSON document', samples['all.json']),
         ('/api/status.json', 'Result of the daily link check, one object per unreachable download',
          samples['status.json']),
+        ('/api/notices', 'Security advisories and notices from gl-i.net, one tab-separated line each: '
+                         'level, id, updated, URL, text. Empty when there are none', samples['notices']),
     ]
 
 

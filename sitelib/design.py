@@ -11,6 +11,7 @@ import html as html_lib
 
 from sitelib.core import (AUTHOR_URL, DOCS_DIR, FORUM_URL, GITHUB_URL, OG_IMAGE_PATH, OG_IMAGE_SIZE,
                           SITE_NAME, SITE_URL, SPONSOR_URL)
+from sitelib.notices import banner_html, notices_css
 
 THEME_COLOR_NEW = '#12344D'
 UNOFFICIAL_NOTE = 'Unofficial community project, not affiliated with GL.iNet'
@@ -245,8 +246,10 @@ def page_head(title, description='', canonical='', root='', feeds=(), extra_css=
     ]
     for feed_title, href in feeds:
         lines.append(f'<link rel="alternate" type="application/atom+xml" title="{html_lib.escape(feed_title, quote=True)}" href="{href}">')
-    lines.append(f'<style>{DESIGN_CSS}{extra_css}</style>')
+    lines.append(f'<style>{DESIGN_CSS}{extra_css}{notices_css()}</style>')
     lines += ['</head>', '<body>', ICON_SPRITE]
+    if banner_html():
+        lines.append(banner_html().rstrip('\n'))  # notices from gl-i.net, above the header
     return '\n'.join(lines) + '\n'
 
 
