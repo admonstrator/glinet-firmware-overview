@@ -42,6 +42,12 @@ class DocsStatusTests(unittest.TestCase):
 
     # /docs/ -----------------------------------------------------------------
 
+    def test_curl_commands_carry_the_scheme(self):
+        for name, page in (('docs', self.docs_html), ('status', self.status), ('cli', self.cli)):
+            for url in re.findall(r'curl (?:-\S+ )*(\S+)', page):
+                if 'gl-i.net' in url:
+                    self.assertTrue(url.lstrip('"$(').startswith('https://'), f'{name}: {url}')
+
     def test_docs_sections_in_r5_order(self):
         self.assertEqual([sid for sid, _ in DOCS_SECTIONS], ['menu', 'text', 'api', 'feeds', 'examples', 'codes'])
         positions = [self.docs_html.find(f'<h2 id="{sid}">') for sid, _ in DOCS_SECTIONS]
