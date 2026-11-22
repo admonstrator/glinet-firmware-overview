@@ -2,7 +2,7 @@ name: Update and Deploy Firmware Overview
 
 on:
   schedule:
-     - cron: '26 */2 * * *' # Runs every 2h
+    - cron: '26 * * * *' # hourly, off the full hour when Actions is busiest
   workflow_dispatch: # Allows manual trigger
 
 permissions:
@@ -10,17 +10,16 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# One deployment at a time. A running deployment is never cancelled midway:
+# cancelling it left the Pages deployment half done and the run red.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,6 +44,28 @@ jobs:
           # Specifically index.html and the api folder.
           path: '.'
 
+  # Deploy runs as its own job: the artifact list of a run lags behind the
+  # upload, and deploy-pages called in the same job right after the upload
+  # regularly found "0 artifacts". The second attempt covers the rare case
+  # where the list still lags after the job switch.
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.retry.outputs.page_url || steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Wait before second attempt
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+
+      - name: Deploy to GitHub Pages (second attempt)
+        id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
