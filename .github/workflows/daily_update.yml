@@ -2,7 +2,7 @@ name: Update and Deploy Firmware Overview
 
 on:
   schedule:
-     - cron: '0 */2 * * *' # Runs every 2h
+     - cron: '26 */2 * * *' # Runs every 2h
   workflow_dispatch: # Allows manual trigger
 
 permissions:
