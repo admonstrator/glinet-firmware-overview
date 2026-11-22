@@ -3,7 +3,7 @@ name: Check gl-i.net notices
 # Every 30 minutes: when gl-i.net has published, changed or removed a security
 # advisory or notice since the last build, start "Update and Deploy Firmware
 # Overview" so the banner on this site follows within half an hour instead of
-# waiting for the daily run. The check itself takes a few seconds.
+# waiting for the hourly run. The check itself takes a few seconds.
 
 on:
   schedule:
