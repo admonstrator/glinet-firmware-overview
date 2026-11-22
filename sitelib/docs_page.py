@@ -54,7 +54,7 @@ DOCS_CSS = """
 # ---------------------------------------------------------------------------
 
 def site_host():
-    """'firmware.gl-i.net' (curl defaults to http://, which the site answers as well)."""
+    """'firmware.gl-i.net', for prose. Commands always use the full SITE_URL."""
     return SITE_URL.split('://', 1)[-1]
 
 
@@ -242,7 +242,6 @@ def generate_docs_html(models, models_metadata, generated_at):
     """HTML of /docs/: interactive menu, plain-text pages, flat-file API, feeds, examples, model codes."""
     esc = html_lib.escape
     root = '../'
-    host = site_host()
     code, dl_stage = docs_example(models)
     lower = code.lower()
     samples = api_samples(models, models_metadata, code)
@@ -270,7 +269,7 @@ def generate_docs_html(models, models_metadata, generated_at):
                        f'  <ul class="codes">{"".join(lis)}</ul>\n')
 
     jump = ''.join(f'<a href="#{sid}">{esc(title)}</a>' for sid, title in DOCS_SECTIONS)
-    text_rows = [(f'curl {host}{path}', comment) for path, comment in _plain_text_pages(code)]
+    text_rows = [(f'curl {SITE_URL}{path}', comment) for path, comment in _plain_text_pages(code)]
 
     main = f"""<main class="wrap doc">
   <nav class="jump" aria-label="On this page">{jump}</nav>

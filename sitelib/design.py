@@ -297,7 +297,6 @@ def site_header(root, title, lead='', crumbs=(), sku='', current='', extra=''):
 
 def site_footer(root, example_model='mt3000'):
     """Footer with the disclaimer and the pointer to the API & terminal docs."""
-    host = SITE_URL.split('://', 1)[-1]
     return f"""
 <footer>
   <div class="wrap cols">
@@ -311,7 +310,7 @@ def site_footer(root, example_model='mt3000'):
     <section>
       <h2>From a script or the terminal</h2>
       <p>Every page is also available as plain text, and each value has its own URL:</p>
-      <pre>curl {host}/api/{example_model}/release/version</pre>
+      <pre>curl {SITE_URL}/api/{example_model}/release/version</pre>
       <p><a href="{root}{DOCS_DIR}/">How to use the API and the terminal menu</a></p>
     </section>
   </div>
